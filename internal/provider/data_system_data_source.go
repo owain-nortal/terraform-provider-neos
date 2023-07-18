@@ -142,13 +142,13 @@ type DataSystemDataSourceModelV2 struct {
 
 // coffeesModel maps coffees schema data.
 type DataSystemModelV2 struct {
-	Identifier  types.String         `tfsdk:"id"`
-	Urn         types.String         `tfsdk:"urn"`
-	Name        types.String         `tfsdk:"name"`
-	Description types.String         `tfsdk:"description"`
-	Label       types.String         `tfsdk:"label"`
-	Owner       types.String         `tfsdk:"owner"`
-	CreatedAt   types.String         `tfsdk:"created_at"`
+	Identifier  types.String           `tfsdk:"id"`
+	Urn         types.String           `tfsdk:"urn"`
+	Name        types.String           `tfsdk:"name"`
+	Description types.String           `tfsdk:"description"`
+	Label       types.String           `tfsdk:"label"`
+	Owner       types.String           `tfsdk:"owner"`
+	CreatedAt   types.String           `tfsdk:"created_at"`
 	State       DataSystemStateModelV2 `tfsdk:"state"`
 }
 
@@ -156,4 +156,3 @@ type DataSystemStateModelV2 struct {
 	State   types.String `tfsdk:"state"`
 	Healthy types.Bool   `tfsdk:"healthy"`
 }
-
