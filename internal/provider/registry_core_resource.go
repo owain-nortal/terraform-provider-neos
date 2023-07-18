@@ -132,7 +132,6 @@ func (r *registryCoreResource) Create(ctx context.Context, req resource.CreateRe
 	//	tflog.Info(ctx, fmt.Sprintf("££ Create Post request [%s] [%s] [%s] [%s]", plan.ID, plan.Name, plan.Label, plan.Description))
 
 	result, err := r.client.RegistryCorePost(ctx, item)
-	tflog.Info(ctx, fmt.Sprintf("££ Create Post request [%s] [%s] [%s] [%s] [%s] [%s]"))
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating registry entry for core",

@@ -180,7 +180,6 @@ func (r *dataProductResource) Create(ctx context.Context, req resource.CreateReq
 	//	tflog.Info(ctx, fmt.Sprintf("££ Create Post request [%s] [%s] [%s] [%s]", plan.ID, plan.Name, plan.Label, plan.Description))
 
 	result, err := r.client.DataProductPost(ctx, item)
-	tflog.Info(ctx, fmt.Sprintf("££ Create Post request [%s] [%s] [%s] [%s] [%s] [%s]"))
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating   data system",
@@ -188,8 +187,6 @@ func (r *dataProductResource) Create(ctx context.Context, req resource.CreateReq
 		)
 		return
 	}
-
-	//	tflog.Info(ctx, fmt.Sprintf("££ Create Post result [%s] [%s] [%s] [%s] [%s] [%s]", result.Identifier, result.Name, result.Urn, result.Description, result.Label, result.CreatedAt.String()))
 
 	plan.ID = types.StringValue(result.Identifier)
 	plan.Name = types.StringValue(result.Name)
@@ -250,12 +247,6 @@ func (r *dataProductResource) Read(ctx context.Context, req resource.ReadRequest
 		}
 	}
 
-	//	tsv, _ := state.ID.ToStringValue(ctx)
-	// Set refreshed state
-	//	tflog.Info(ctx, "££ READ iterate over list")
-	//	tflog.Info(ctx, tsv.String())
-	//	tflog.Info(ctx, state.ID.ValueString())
-
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -273,13 +264,6 @@ func (r *dataProductResource) Update(ctx context.Context, req resource.UpdateReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	//tflog.Info(ctx, "££ Update After Create Get plan")
-	// i, e := plan.ID.ToStringValue(ctx)
-	// if e.HasError() {
-	// 	tflog.Info(ctx, "Data system update plan get has error")
-	// 	return
-	// }
 
 	linkList, diag := plan.Links.ToListValue(ctx)
 	resp.Diagnostics.Append(diag...)
@@ -301,8 +285,6 @@ func (r *dataProductResource) Update(ctx context.Context, req resource.UpdateReq
 	for _, v := range contactIDs.Elements() {
 		contacts = append(contacts, v.String())
 	}
-
-	//tflog.Info(ctx, "££££ update After the ranges")
 
 	item := neos.DataProductPutRequest{
 		Entity: neos.DataProductPutRequestEntity{
@@ -326,8 +308,6 @@ func (r *dataProductResource) Update(ctx context.Context, req resource.UpdateReq
 		)
 		return
 	}
-	//tflog.Info(ctx, fmt.Sprintf("££ Create Post result [%s] [%s] [%s] [%s] [%s] [%s]", result.Identifier, result.Name, result.Urn, result.Description, result.Label, result.CreatedAt.String()))
-
 	infoResult, err := r.client.DataProductPutInfo(ctx, plan.ID.ValueString(), eItem)
 	if err != nil {
 		resp.Diagnostics.AddError(

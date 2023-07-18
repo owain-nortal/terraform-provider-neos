@@ -180,7 +180,6 @@ func (r *dataSystemResource) Create(ctx context.Context, req resource.CreateRequ
 	//	tflog.Info(ctx, fmt.Sprintf("££ Create Post request [%s] [%s] [%s] [%s]", plan.ID, plan.Name, plan.Label, plan.Description))
 
 	result, err := r.client.DataSystemPost(ctx, item)
-	tflog.Info(ctx, fmt.Sprintf("££ Create Post request [%s] [%s] [%s] [%s] [%s] [%s]"))
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating   data system",
