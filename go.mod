@@ -7,11 +7,12 @@ require (
 	github.com/hashicorp/terraform-plugin-framework v1.3.2
 	github.com/hashicorp/terraform-plugin-go v0.18.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
+	github.com/owain-nortal/neos-client-go v0.0.0-20230718101406-098266df6278
 )
 
-require github.com/owain-nortal/neos-client-go v0.0.0
+// require github.com/owain-nortal/neos-client-go v0.0.0
 
-replace github.com/owain-nortal/neos-client-go => /home/user/git/github.com/owain-nortal/neos-client
+// replace github.com/owain-nortal/neos-client-go => /home/user/git/github.com/owain-nortal/neos-client
 
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
