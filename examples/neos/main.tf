@@ -29,7 +29,7 @@ provider "neos" {
 
 resource "neos_registry_core" "testcore1" {
   partition = "ksa"
-  name = "owain-test3"
+  name      = "owain-test3"
 }
 
 output "access_key" {
@@ -42,7 +42,7 @@ output "access_key" {
 # }
 
 # variable "links" {
-  
+
 #   type    = list(any)
 #   default = ["link1", "link2"]
 # }
