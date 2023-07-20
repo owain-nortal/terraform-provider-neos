@@ -16,15 +16,15 @@ provider "neos" {
 
 //data "neos_data_system" "example" {}
 
-data "neos_registry_core" "cores" {
-}
+# data "neos_registry_core" "cores" {
+# }
 
 # output "edu_data_system" {
 #   value = data.neos_registry_core.cores
 # }
 
-data "neos_data_system" "edu" {
-}
+# data "neos_data_system" "edu" {
+# }
 
 
 resource "neos_registry_core" "testcore1" {
