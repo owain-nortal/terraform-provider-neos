@@ -250,7 +250,7 @@ func (p *neosProvider) Configure(ctx context.Context, req provider.ConfigureRequ
 
 	neos.AccessToken = loginResponse.AccessToken
 
-	client := neos.NewNeosClient(iamhost, registryhost, corehost,"https")
+	client := neos.NewNeosClient(iamhost, registryhost, corehost, "https")
 
 	// Make the NEOS client available during DataSource and Resource
 	// type Configure methods.
