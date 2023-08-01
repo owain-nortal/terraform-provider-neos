@@ -17,39 +17,39 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 // var (
-// 	_ resource.Resource = &dataProductResource{}
+// 	_ resource.Resource = &dataUnitResource{}
 // )
 
-// New data productResource is a helper function to simplify the provider implementation.
-func NewDataProductResource() resource.Resource {
-	return &dataProductResource{}
+// New data systemResource is a helper function to simplify the provider implementation.
+func NewDataUnitResource() resource.Resource {
+	return &dataUnitResource{}
 }
 
-// dataProductResource is the resource implementation.
-type dataProductResource struct {
+// dataUnitResource is the resource implementation.
+type dataUnitResource struct {
 	client *neos.NeosClient
 }
 
 var (
-	_ resource.Resource                = &dataProductResource{}
-	_ resource.ResourceWithConfigure   = &dataProductResource{}
-	_ resource.ResourceWithImportState = &dataProductResource{}
+	_ resource.Resource                = &dataUnitResource{}
+	_ resource.ResourceWithConfigure   = &dataUnitResource{}
+	_ resource.ResourceWithImportState = &dataUnitResource{}
 )
 
 // Metadata returns the resource type name.
-func (r *dataProductResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_data_product"
+func (r *dataUnitResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_data_unit"
 }
 
 // Schema defines the schema for the resource.
-func (r *dataProductResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *dataUnitResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Required:    false,
 				Optional:    false,
-				Description: "The Unique ID of the data product",
+				Description: "The Unique ID of the data system",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -58,7 +58,7 @@ func (r *dataProductResource) Schema(_ context.Context, _ resource.SchemaRequest
 				Computed:    true,
 				Required:    false,
 				Optional:    false,
-				Description: "The URN of the data product which is read only",
+				Description: "The URN of the data system which is read only",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -67,31 +67,31 @@ func (r *dataProductResource) Schema(_ context.Context, _ resource.SchemaRequest
 				Computed:    false,
 				Required:    true,
 				Optional:    false,
-				Description: "Name of the data product",
+				Description: "Name of the data system",
 			},
 			"description": schema.StringAttribute{
 				Computed:    false,
 				Optional:    true,
 				Required:    false,
-				Description: "Description of the data product",
+				Description: "Description of the data system",
 			},
 			"label": schema.StringAttribute{
 				Computed:    false,
 				Optional:    true,
 				Required:    false,
-				Description: "Label for the data product",
+				Description: "Label for the data system",
 			},
 			"owner": schema.StringAttribute{
 				Computed:    false,
 				Optional:    true,
 				Required:    false,
-				Description: "The owner of the data product",
+				Description: "The owner of the data system",
 			},
 			"created_at": schema.StringAttribute{
 				Computed:    true,
 				Optional:    false,
 				Required:    false,
-				Description: "when the data product was created",
+				Description: "when the data system was created",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -117,8 +117,8 @@ func (r *dataProductResource) Schema(_ context.Context, _ resource.SchemaRequest
 	}
 }
 
-// dataProductResourceModel maps the resource schema data.
-type dataProductResourceModel struct {
+// dataUnitResourceModel maps the resource schema data.
+type dataUnitResourceModel struct {
 	ID          types.String `tfsdk:"id"`
 	URN         types.String `tfsdk:"urn"`
 	Name        types.String `tfsdk:"name"`
@@ -132,10 +132,10 @@ type dataProductResourceModel struct {
 }
 
 // Create a new resource.
-func (r *dataProductResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *dataUnitResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	//tflog.Info(ctx, "££ Create Get plan")
 	// Retrieve values from plan
-	var plan dataProductResourceModel
+	var plan dataUnitResourceModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -164,13 +164,13 @@ func (r *dataProductResource) Create(ctx context.Context, req resource.CreateReq
 		contacts = append(contacts, v.String())
 	}
 
-	item := neos.DataProductPostRequest{
-		Entity: neos.DataProductPostRequestEntity{
+	item := neos.DataUnitPostRequest{
+		Entity: neos.DataUnitPostRequestEntity{
 			Name:        plan.Name.String(),
 			Label:       plan.Label.String(),
 			Description: plan.Description.String(),
 		},
-		EntityInfo: neos.DataProductPostRequestEntityInfo{
+		EntityInfo: neos.DataUnitPostRequestEntityInfo{
 			Owner:      plan.Owner.String(),
 			ContactIds: contacts,
 			Links:      links,
@@ -179,14 +179,16 @@ func (r *dataProductResource) Create(ctx context.Context, req resource.CreateReq
 
 	//	tflog.Info(ctx, fmt.Sprintf("££ Create Post request [%s] [%s] [%s] [%s]", plan.ID, plan.Name, plan.Label, plan.Description))
 
-	result, err := r.client.DataProductPost(ctx, item)
+	result, err := r.client.DataUnitPost(ctx, item)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating   data product",
-			"Could not create   data product, unexpected error: "+err.Error(),
+			"Error creating   data system",
+			"Could not create   data system, unexpected error: "+err.Error(),
 		)
 		return
 	}
+
+	//	tflog.Info(ctx, fmt.Sprintf("££ Create Post result [%s] [%s] [%s] [%s] [%s] [%s]", result.Identifier, result.Name, result.Urn, result.Description, result.Label, result.CreatedAt.String()))
 
 	plan.ID = types.StringValue(result.Identifier)
 	plan.Name = types.StringValue(result.Name)
@@ -207,12 +209,12 @@ func (r *dataProductResource) Create(ctx context.Context, req resource.CreateReq
 
 // Read refreshes the Terraform state with the latest data.
 // Read resource information.
-func (r *dataProductResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *dataUnitResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	// Get current state
 
-	tflog.Info(ctx, "DP READ Get current state")
+	//	tflog.Info(ctx, "££ READ Get current state")
 
-	var state dataProductResourceModel
+	var state dataUnitResourceModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -222,17 +224,17 @@ func (r *dataProductResource) Read(ctx context.Context, req resource.ReadRequest
 	foo := fmt.Sprintf("ID [%s]  Desc [%s]", state.ID.ValueString(), state.Description.ValueString())
 	tflog.Info(ctx, foo)
 
-	dataProductList, err := r.client.DataProductGet()
+	dataUnitList, err := r.client.DataUnitGet()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading NEOS data product",
-			"Could not read NEOS  data product ID "+state.ID.ValueString()+": "+err.Error(),
+			"Error Reading NEOS data system",
+			"Could not read NEOS  data system ID "+state.ID.ValueString()+": "+err.Error(),
 		)
 		return
 	}
 
-	tflog.Info(ctx, fmt.Sprintf("DP READ iterate over list looking for: %s", state.ID.ValueString()))
-	for _, ds := range dataProductList.Entities {
+	tflog.Info(ctx, fmt.Sprintf("££ READ iterate over list looking for: %s", state.ID.ValueString()))
+	for _, ds := range dataUnitList.Entities {
 		//		tflog.Info(ctx, fmt.Sprintf("££ READ ITEM: [%s] [%s] %v", ds.Identifier, state.ID.ValueString(), (ds.Identifier == state.ID.ValueString())))
 		if ds.Identifier == state.ID.ValueString() {
 			//			tflog.Info(ctx, fmt.Sprintf("££ READ got one in list [%s]", ds.Identifier))
@@ -247,23 +249,36 @@ func (r *dataProductResource) Read(ctx context.Context, req resource.ReadRequest
 		}
 	}
 
+	//	tsv, _ := state.ID.ToStringValue(ctx)
+	// Set refreshed state
+	//	tflog.Info(ctx, "££ READ iterate over list")
+	//	tflog.Info(ctx, tsv.String())
+	//	tflog.Info(ctx, state.ID.ValueString())
+
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
-		tflog.Info(ctx, "data product Read Has error")
+		tflog.Info(ctx, "Data system Read Has error")
 		return
 	}
 
 }
 
 // Update updates the resource and sets the updated Terraform state on success.
-func (r *dataProductResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan dataProductResourceModel
+func (r *dataUnitResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan dataUnitResourceModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	//tflog.Info(ctx, "££ Update After Create Get plan")
+	// i, e := plan.ID.ToStringValue(ctx)
+	// if e.HasError() {
+	// 	tflog.Info(ctx, "Data system update plan get has error")
+	// 	return
+	// }
 
 	linkList, diag := plan.Links.ToListValue(ctx)
 	resp.Diagnostics.Append(diag...)
@@ -286,33 +301,37 @@ func (r *dataProductResource) Update(ctx context.Context, req resource.UpdateReq
 		contacts = append(contacts, v.String())
 	}
 
-	item := neos.DataProductPutRequest{
-		Entity: neos.DataProductPutRequestEntity{
+	//tflog.Info(ctx, "££££ update After the ranges")
+
+	item := neos.DataUnitPutRequest{
+		Entity: neos.DataUnitPutRequestEntity{
 			Name:        plan.Name.String(),
 			Label:       plan.Label.String(),
 			Description: plan.Description.String(),
 		},
 	}
 
-	eItem := neos.DataProductPutRequestEntityInfo{
+	eItem := neos.DataUnitPutRequestEntityInfo{
 		Owner:      plan.Owner.String(),
 		ContactIds: contacts,
 		Links:      links,
 	}
 
-	result, err := r.client.DataProductPut(ctx, plan.ID.ValueString(), item)
+	result, err := r.client.DataUnitPut(ctx, plan.ID.ValueString(), item)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error updating data product",
-			"Could not put data product, unexpected error: "+err.Error(),
+			"Error updating data system",
+			"Could not put data system, unexpected error: "+err.Error(),
 		)
 		return
 	}
-	infoResult, err := r.client.DataProductPutInfo(ctx, plan.ID.ValueString(), eItem)
+	//tflog.Info(ctx, fmt.Sprintf("££ Create Post result [%s] [%s] [%s] [%s] [%s] [%s]", result.Identifier, result.Name, result.Urn, result.Description, result.Label, result.CreatedAt.String()))
+
+	infoResult, err := r.client.DataUnitPutInfo(ctx, plan.ID.ValueString(), eItem)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error updating data product",
-			"Could not put data product, unexpected error: "+err.Error(),
+			"Error updating data system",
+			"Could not put data system, unexpected error: "+err.Error(),
 		)
 		return
 	}
@@ -346,31 +365,27 @@ func (r *dataProductResource) Update(ctx context.Context, req resource.UpdateReq
 }
 
 // Delete deletes the resource and removes the Terraform state on success.
-func (r *dataProductResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var plan dataProductResourceModel
+func (r *dataUnitResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+
+	var plan dataUnitResourceModel
 	diags := req.State.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	id := plan.ID.ValueString()
-
-	tflog.Info(ctx, fmt.Sprintf("DP Delete iterate plan ID: %s", id))
-
-
-	err := r.client.DataProductDelete(ctx,id)
+	err := r.client.DataUnitDelete(ctx, plan.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error deleting data product",
-			"Could not delete data product, unexpected error: "+err.Error(),
+			"Error deleting data system",
+			"Could not delete data system, unexpected error: "+err.Error(),
 		)
 		return
 	}
 
 }
 
-func (r *dataProductResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *dataUnitResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -380,7 +395,7 @@ func (r *dataProductResource) Configure(_ context.Context, req resource.Configur
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *neos.DataProductClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			fmt.Sprintf("Expected *neos.DataUnitClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 
 		return
@@ -389,7 +404,7 @@ func (r *dataProductResource) Configure(_ context.Context, req resource.Configur
 	r.client = client
 }
 
-func (r *dataProductResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *dataUnitResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

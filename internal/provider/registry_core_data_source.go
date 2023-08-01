@@ -31,6 +31,10 @@ func (d *registryCoreDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	var state RegistryCoreDataSourceModel
 
+	state.RegistryCores = append(state.RegistryCores, RegistryCoreModel{})
+
+	state.RegistryCores[0].ID = types.StringValue("00000000-0000-0000-0000-000000000000")
+
 	list, err := d.client.RegistryCoreGet()
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -47,6 +51,7 @@ func (d *registryCoreDataSource) Read(ctx context.Context, req datasource.ReadRe
 	// Map response body to model
 	for _, ds := range list.Cores {
 		registryCoreState := RegistryCoreModel{
+			ID:   types.StringValue(ds.ID),
 			Host: types.StringValue(ds.Host),
 			Name: types.StringValue(ds.Name),
 			Urn:  types.StringValue(ds.Urn),
@@ -100,6 +105,9 @@ func (d *registryCoreDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 						"host": schema.StringAttribute{
 							Computed: true,
 						},
+						"id": schema.StringAttribute{
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -112,6 +120,7 @@ type RegistryCoreDataSourceModel struct {
 }
 
 type RegistryCoreModel struct {
+	ID   types.String `tfsdk:"id"`
 	Host types.String `tfsdk:"host"`
 	Urn  types.String `tfsdk:"urn"`
 	Name types.String `tfsdk:"name"`

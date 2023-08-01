@@ -264,6 +264,9 @@ func (p *neosProvider) DataSources(_ context.Context) []func() datasource.DataSo
 		NewDataSystemDataSource,
 		NewDataProductDataSource,
 		NewRegistryCoreDataSource,
+		NewDataSourceDataSource,
+		NewDataUnitDataSource,
+		NewLinksDataSource,
 	}
 }
 
@@ -272,5 +275,8 @@ func (p *neosProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewDataSystemResource,
 		NewDataProductResource,
 		NewRegistryCoreResource,
+		NewDataSourceResource,
+		NewDataUnitResource,
+		NewLinkDataSourceDataUnitResource,
 	}
 }

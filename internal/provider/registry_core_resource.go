@@ -16,9 +16,6 @@ import (
 )
 
 // Ensure the implementation satisfies the expected interfaces.
-// var (
-// 	_ resource.Resource = &registryCoreResource{}
-// )
 
 // New data systemResource is a helper function to simplify the provider implementation.
 func NewRegistryCoreResource() resource.Resource {
@@ -151,17 +148,12 @@ func (r *registryCoreResource) Create(ctx context.Context, req resource.CreateRe
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	//	tflog.Info(ctx, fmt.Sprintf("ID [%s] Desc[%s]", plan.ID, plan.Description))
-
 }
 
 // Read refreshes the Terraform state with the latest data.
 // Read resource information.
 func (r *registryCoreResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	// Get current state
-
-	//	tflog.Info(ctx, "££ READ Get current state")
 
 	var state registryCoreResourceModel
 	diags := req.State.Get(ctx, &state)
@@ -180,21 +172,13 @@ func (r *registryCoreResource) Read(ctx context.Context, req resource.ReadReques
 	}
 
 	for _, ds := range dataSystemList.Cores {
-		//		tflog.Info(ctx, fmt.Sprintf("££ READ ITEM: [%s] [%s] %v", ds.Identifier, state.ID.ValueString(), (ds.Identifier == state.ID.ValueString())))
 		if ds.Name == state.Name.ValueString() {
-			//			tflog.Info(ctx, fmt.Sprintf("££ READ got one in list [%s]", ds.Identifier))
 			state.Host = types.StringValue(ds.Host)
 			state.Name = types.StringValue(ds.Name)
 			state.URN = types.StringValue(ds.Urn)
 			break
 		}
 	}
-
-	//	tsv, _ := state.ID.ToStringValue(ctx)
-	// Set refreshed state
-	//	tflog.Info(ctx, "££ READ iterate over list")
-	//	tflog.Info(ctx, tsv.String())
-	//	tflog.Info(ctx, state.ID.ValueString())
 
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
