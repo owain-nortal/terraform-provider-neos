@@ -1,0 +1,24 @@
+# This file is maintained automatically by "terraform init".
+# Manual edits may be lost in future updates.
+
+provider "registry.terraform.io/owain-nortal/neos" {
+  version = "0.0.2"
+  hashes = [
+    "h1:fkfNlGtDUBqoD3a0Q5uBtPm8Y+mtReiS6NNhU9mwq0g=",
+    "zh:0c80517f664f4c046ee8ee416548aab818bbb64b22edd73cb339b169ebe69e08",
+    "zh:0e5b64ffb649168953a03afde0cec7f6eff5375dbea3d7adabe27f0e28374ead",
+    "zh:0eae62fc5219f088e4d038849bac0d49f1d4223a4c0f9e5c5417efaa1393e10a",
+    "zh:2015d4ea877e99cbc733578c9548032dd9828357645be070da16556f35737dbf",
+    "zh:26912ecbf6f68e47c7a88b99da1480c65da97e3fce40bafdb03f984798dc793b",
+    "zh:2d26365e6bb8f473c88637945fe5b18851f731d9a7416fa2d63c4a7b16e2a5aa",
+    "zh:40d62253bc2a8d1671d9c863735f4e110c5ca98b41f2cb0adf5803747a9fe1bf",
+    "zh:611f06ef280d5ad805634bc22ebe2c3045dfc791d55703fe6f17ca37cdc1e7d0",
+    "zh:68950d50c7ece5250d241df3362685840d41a04e98b30a6347731b9a31c95651",
+    "zh:728192c76f062f00d3787f6a40c0921ae741d3cc655383d7b7af9b2a2c8d4d42",
+    "zh:890df766e9b839623b1f0437355032a3c006226a6c200cd911e15ee1a9014e9f",
+    "zh:92693915465745a16b13aeaa92670e9aca1139e5971a11b70ebb9649601b107f",
+    "zh:a4134c61094967765e49ff8b296091280aeb78b8bf9d4f2952fafdf9930a1a63",
+    "zh:bf4cf346a28a369de4fcdb1e11e19f48842896a0be7bee8a42675bb1d1bbe436",
+    "zh:ebf5bdece00c265deb711127ba6021336badaed08092ee8154f2d3078f235e9f",
+  ]
+}

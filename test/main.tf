@@ -7,11 +7,11 @@ terraform {
 }
 
 provider "neos" {
-  username      = ""
-  password      = ""
-  iam_host      = ""
-  core_host     = ""
-  registry_host = ""
+  username      = "owain.perry "
+  password      = "**Marley22"
+  iam_host      = "sandbox.city3os.com"
+  core_host     = "op-02.neosdata.net"
+  registry_host = "sandbox.city3os.com"
 }
 
 //data "neos_data_system" "example" {}
@@ -52,14 +52,14 @@ output "access_key" {
 #   default = ["contacts1", "contacts2"]
 # }
 
-# resource "neos_data_system" "op-test1" {
-#   name        = "APTestDataSystem"
-#   description = "desc test data system 2"
-#   owner       = "test data system 2 owner"
-#   label       = "AP2"
-#   links       = var.links
-#   contact_ids = var.contact_ids
-# }
+resource "neos_data_system" "op-test1" {
+  name        = "APTestDataSystem"
+  description = "desc test data system 2"
+  owner       = "test data system 2 owner"
+  label       = "AP2"
+  links       = var.links
+  contact_ids = var.contact_ids
+}
 
 # resource "neos_data_system" "op-test2" {
 #   name        = "APTestDataSystem3"

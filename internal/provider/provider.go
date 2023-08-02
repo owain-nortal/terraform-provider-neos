@@ -278,5 +278,10 @@ func (p *neosProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewDataSourceResource,
 		NewDataUnitResource,
 		NewLinkDataSourceDataUnitResource,
+		NewLinkDataSystemDataSourceResource,
+		NewLinkDataUnitDataProductResource,
+		NewOutputResource,
+		NewLinkDataProductOutputResource,
+		NewLinkDataProductDataProductResource,
 	}
 }

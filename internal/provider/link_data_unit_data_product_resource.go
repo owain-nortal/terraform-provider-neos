@@ -14,40 +14,40 @@ import (
 )
 
 
-func NewLinkDataSourceDataUnitResource() resource.Resource {
-	return &linkDataSourceDataUnitResource{}
+func NewLinkDataUnitDataProductResource() resource.Resource {
+	return &linkDataUnitDataProductResource{}
 }
 
-type linkDataSourceDataUnitResource struct {
+type linkDataUnitDataProductResource struct {
 	client *neos.NeosClient
 }
 
 var (
-	_ resource.Resource                = &linkDataSourceDataUnitResource{}
-	_ resource.ResourceWithConfigure   = &linkDataSourceDataUnitResource{}
-	_ resource.ResourceWithImportState = &linkDataSourceDataUnitResource{}
+	_ resource.Resource                = &linkDataUnitDataProductResource{}
+	_ resource.ResourceWithConfigure   = &linkDataUnitDataProductResource{}
+	_ resource.ResourceWithImportState = &linkDataUnitDataProductResource{}
 )
 
 // Metadata returns the resource type name.
-func (r *linkDataSourceDataUnitResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_link_data_source_data_unit"
+func (r *linkDataUnitDataProductResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_link_data_unit_data_product"
 }
 
 // Schema defines the schema for the resource.
-func (r *linkDataSourceDataUnitResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *linkDataUnitDataProductResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"parent_identifier": schema.StringAttribute{
 				Computed:    false,
 				Required:    true,
 				Optional:    false,
-				Description: "The data source parent identifier",
+				Description: "The data system parent identifier",
 			},
 			"child_identifier": schema.StringAttribute{
 				Computed:    false,
 				Required:    true,
 				Optional:    false,
-				Description: "The data unit child identifier",
+				Description: "The data source child identifier",
 			},
 			"last_updated": schema.StringAttribute{
 				Computed:    true,
@@ -59,18 +59,18 @@ func (r *linkDataSourceDataUnitResource) Schema(_ context.Context, _ resource.Sc
 	}
 }
 
-// linkDataSourceDataUnitResourceModel maps the resource schema data.
-type linkDataSourceDataUnitResourceModel struct {
+// linkDataUnitDataProductResourceModel maps the resource schema data.
+type linkDataUnitDataProductResourceModel struct {
 	ParentIdentifier types.String `tfsdk:"parent_identifier"`
 	ChildIdentifier  types.String `tfsdk:"child_identifier"`
 	LastUpdated      types.String `tfsdk:"last_updated"`
 }
 
 // Create a new resource.
-func (r *linkDataSourceDataUnitResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	tflog.Info(ctx, "linkDataSourceDataUnitResource Create Get plan")
+func (r *linkDataUnitDataProductResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	tflog.Info(ctx, "linkDataUnitDataProductResource Create Get plan")
 	// Retrieve values from plan
-	var plan linkDataSourceDataUnitResourceModel
+	var plan linkDataUnitDataProductResourceModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -79,9 +79,9 @@ func (r *linkDataSourceDataUnitResource) Create(ctx context.Context, req resourc
 
 	//tflog.Info(ctx, "££ After Create Get plan")
 
-	tflog.Info(ctx, fmt.Sprintf("linkDataSourceDataUnitResource Create Post request [%s] [%s]", plan.ParentIdentifier.ValueString(), plan.ChildIdentifier.ValueString()))
+	tflog.Info(ctx, fmt.Sprintf("linkDataUnitDataProductResource Create Post request [%s] [%s]", plan.ParentIdentifier.ValueString(), plan.ChildIdentifier.ValueString()))
 
-	result, err := r.client.LinkDataSourceDataUnitPost(ctx, plan.ParentIdentifier.ValueString(), plan.ChildIdentifier.ValueString())
+	result, err := r.client.LinkDataUnitDataProductPost(ctx, plan.ParentIdentifier.ValueString(), plan.ChildIdentifier.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating link",
@@ -90,7 +90,7 @@ func (r *linkDataSourceDataUnitResource) Create(ctx context.Context, req resourc
 		return
 	}
 
-	tflog.Info(ctx, fmt.Sprintf("linkDataSourceDataUnitResource Create Post result [%s] [%s] ", result.Parent.Identifier, result.Child.Identifier))
+	tflog.Info(ctx, fmt.Sprintf("linkDataUnitDataProductResource Create Post result [%s] [%s] ", result.Parent.Identifier, result.Child.Identifier))
 
 	plan.ParentIdentifier = types.StringValue(result.Parent.Identifier)
 	plan.ChildIdentifier = types.StringValue(result.Child.Identifier)
@@ -103,19 +103,19 @@ func (r *linkDataSourceDataUnitResource) Create(ctx context.Context, req resourc
 }
 
 // Read resource information.
-func (r *linkDataSourceDataUnitResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *linkDataUnitDataProductResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	// Get current state
 
-	tflog.Info(ctx, "linkDataSourceDataUnitResource READ Get current state")
+	tflog.Info(ctx, "linkDataUnitDataProductResource READ Get current state")
 
-	var state linkDataSourceDataUnitResourceModel
+	var state linkDataUnitDataProductResourceModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	tflog.Info(ctx, fmt.Sprintf("linkDataSourceDataUnitResource Parent ID [%s]  Desc [%s]", state.ParentIdentifier.ValueString(), state.ChildIdentifier.ValueString()))
+	tflog.Info(ctx, fmt.Sprintf("linkDataUnitDataProductResource Parent ID [%s]  Desc [%s]", state.ParentIdentifier.ValueString(), state.ChildIdentifier.ValueString()))
 
 	linksList, err := r.client.LinksGet()
 	if err != nil {
@@ -126,11 +126,11 @@ func (r *linkDataSourceDataUnitResource) Read(ctx context.Context, req resource.
 		return
 	}
 
-	tflog.Info(ctx, fmt.Sprintf("linkDataSourceDataUnitResource READ iterate over list looking for: %s", state.ParentIdentifier.ValueString()))
+	tflog.Info(ctx, fmt.Sprintf("linkDataUnitDataProductResource READ iterate over list looking for: %s", state.ParentIdentifier.ValueString()))
 	for _, ds := range linksList.Links {
-		tflog.Info(ctx, fmt.Sprintf(">>>>> linkDataSourceDataUnitResource READ ITEM: [%s] [%s] ", ds.Parent.Identifier, state.ParentIdentifier.ValueString()))
+		tflog.Info(ctx, fmt.Sprintf("linkDataUnitDataProductResource READ ITEM: [%s] [%s] ", ds.Parent.Identifier, state.ParentIdentifier.ValueString()))
 		if ds.Parent.Identifier == state.ParentIdentifier.ValueString() {
-			tflog.Info(ctx, fmt.Sprintf("linkDataSourceDataUnitResource READ got one in list [%s]", ds.Parent.Identifier))
+			tflog.Info(ctx, fmt.Sprintf("linkDataUnitDataProductResource READ got one in list [%s]", ds.Parent.Identifier))
 			state.ParentIdentifier = types.StringValue(ds.Parent.Identifier)
 			state.ChildIdentifier = types.StringValue(ds.Child.Identifier)
 			break
@@ -140,22 +140,22 @@ func (r *linkDataSourceDataUnitResource) Read(ctx context.Context, req resource.
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
-		tflog.Info(ctx, "linkDataSourceDataUnitResource Links Read Has error")
+		tflog.Info(ctx, "linkDataUnitDataProductResource Links Read Has error")
 		return
 	}
 
 }
 
 // Update updates the resource and sets the updated Terraform state on success.
-func (r *linkDataSourceDataUnitResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan linkDataSourceDataUnitResourceModel
+func (r *linkDataUnitDataProductResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan linkDataUnitDataProductResourceModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	result, err := r.client.LinkDataSourceDataUnitPost(ctx, plan.ParentIdentifier.ValueString(), plan.ChildIdentifier.String())
+	result, err := r.client.LinkDataUnitDataProductPost(ctx, plan.ParentIdentifier.ValueString(), plan.ChildIdentifier.String())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating link",
@@ -182,16 +182,16 @@ func (r *linkDataSourceDataUnitResource) Update(ctx context.Context, req resourc
 }
 
 // Delete deletes the resource and removes the Terraform state on success.
-func (r *linkDataSourceDataUnitResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *linkDataUnitDataProductResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 
-	var plan linkDataSourceDataUnitResourceModel
+	var plan linkDataUnitDataProductResourceModel
 	diags := req.State.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	err := r.client.LinkDataSourceDataUnitDelete(ctx, plan.ParentIdentifier.ValueString(), plan.ChildIdentifier.ValueString())
+	err := r.client.LinkDataUnitDataProductDelete(ctx, plan.ParentIdentifier.ValueString(), plan.ChildIdentifier.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting link", "Could not delete link, unexpected error: "+err.Error())
 		return
@@ -199,7 +199,7 @@ func (r *linkDataSourceDataUnitResource) Delete(ctx context.Context, req resourc
 
 }
 
-func (r *linkDataSourceDataUnitResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *linkDataUnitDataProductResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -207,14 +207,14 @@ func (r *linkDataSourceDataUnitResource) Configure(_ context.Context, req resour
 	client, ok := req.ProviderData.(*neos.NeosClient)
 
 	if !ok {
-		resp.Diagnostics.AddError("Unexpected Data Source Configure Type", fmt.Sprintf("Expected *neos.LinkDataSourceDataUnitClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
+		resp.Diagnostics.AddError("Unexpected Data Source Configure Type", fmt.Sprintf("Expected *neos.LinkDataUnitDataProductClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 		return
 	}
 
 	r.client = client
 }
 
-func (r *linkDataSourceDataUnitResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *linkDataUnitDataProductResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
