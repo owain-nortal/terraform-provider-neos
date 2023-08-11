@@ -20,7 +20,7 @@ import (
 // 	_ resource.Resource = &dataUnitResource{}
 // )
 
-// New data systemResource is a helper function to simplify the provider implementation.
+// New data unitResource is a helper function to simplify the provider implementation.
 func NewDataUnitResource() resource.Resource {
 	return &dataUnitResource{}
 }
@@ -49,7 +49,7 @@ func (r *dataUnitResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 				Computed:    true,
 				Required:    false,
 				Optional:    false,
-				Description: "The Unique ID of the data system",
+				Description: "The Unique ID of the data unit",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -58,7 +58,7 @@ func (r *dataUnitResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 				Computed:    true,
 				Required:    false,
 				Optional:    false,
-				Description: "The URN of the data system which is read only",
+				Description: "The URN of the data unit which is read only",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -67,35 +67,172 @@ func (r *dataUnitResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 				Computed:    false,
 				Required:    true,
 				Optional:    false,
-				Description: "Name of the data system",
+				Description: "Name of the data unit",
 			},
 			"description": schema.StringAttribute{
 				Computed:    false,
 				Optional:    true,
 				Required:    false,
-				Description: "Description of the data system",
+				Description: "Description of thedata unit",
 			},
 			"label": schema.StringAttribute{
 				Computed:    false,
 				Optional:    true,
 				Required:    false,
-				Description: "Label for the data system",
+				Description: "Label for the data unit",
 			},
 			"owner": schema.StringAttribute{
 				Computed:    false,
 				Optional:    true,
 				Required:    false,
-				Description: "The owner of the data system",
+				Description: "The owner of the data unit",
 			},
 			"created_at": schema.StringAttribute{
 				Computed:    true,
 				Optional:    false,
 				Required:    false,
-				Description: "when the data system was created",
+				Description: "when the data unit was created",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			// "config_json": schema.StringAttribute{
+			// 	Computed:    true,
+			// 	Optional:    false,
+			// 	Required:    false,
+			// 	Description: "json that describes the configuration of the data unit",
+			// },
+
+			"config": schema.SingleNestedAttribute{
+				Computed:    false,
+				Optional:    true,
+				Required:    false,
+				Description: "configuration of the data unit",
+				// NestedObject: schema.NestedAttributeObject{
+				Attributes: map[string]schema.Attribute{
+
+					"data_unit_type": schema.StringAttribute{
+						Computed:    false,
+						Optional:    false,
+						Required:    true,
+						Description: "the data unit type",
+					},
+
+					"query": schema.SingleNestedAttribute{
+						Computed:    false,
+						Required:    false,
+						Optional:    true,
+						Description: "query configuration for the data unit",
+						//NestedObject: schema.NestedAttributeObject{
+						Attributes: map[string]schema.Attribute{
+							"query": schema.StringAttribute{
+								Computed:    false,
+								Optional:    false,
+								Required:    true,
+								Description: "The query to execute",
+							},
+							//},
+						},
+					},
+
+					"parquet": schema.SingleNestedAttribute{
+						Computed:    false,
+						Required:    false,
+						Optional:    true,
+						Description: "parquet configuration for the data unit",
+						//NestedObject: schema.NestedAttributeObject{
+						Attributes: map[string]schema.Attribute{
+							// "query": schema.StringAttribute{
+							// 	Computed:    false,
+							// 	Optional:    false,
+							// 	Required:    true,
+							// 	Description: "The query to execute",
+							// },
+							//},
+						},
+					},
+					"table": schema.SingleNestedAttribute{
+						Computed:    false,
+						Required:    false,
+						Optional:    true,
+						Description: "query configuration for the data unit",
+						//NestedObject: schema.NestedAttributeObject{
+						Attributes: map[string]schema.Attribute{
+							"table": schema.StringAttribute{
+								Computed:    false,
+								Optional:    false,
+								Required:    true,
+								Description: "The table name to use",
+							},
+							//	},
+						},
+					},
+					"data_product": schema.SingleNestedAttribute{
+						Computed:    false,
+						Required:    false,
+						Optional:    true,
+						Description: "data product configuration for a data unit",
+						//NestedObject: schema.NestedAttributeObject{
+						Attributes: map[string]schema.Attribute{
+							"engine": schema.StringAttribute{
+								Computed:    false,
+								Optional:    false,
+								Required:    true,
+								Description: "The engine to use",
+							},
+							"table": schema.StringAttribute{
+								Computed:    false,
+								Optional:    false,
+								Required:    true,
+								Description: "The table name to use",
+							},
+							//	},
+						},
+					},
+					"csv": schema.SingleNestedAttribute{
+						Computed:    false,
+						Required:    false,
+						Optional:    true,
+						Description: "csv configuration for a data unit",
+						//NestedObject: schema.NestedAttributeObject{
+						Attributes: map[string]schema.Attribute{
+							"path": schema.StringAttribute{
+								Computed:    false,
+								Optional:    false,
+								Required:    true,
+								Description: "The engine to use",
+							},
+							"has_header": schema.BoolAttribute{
+								Computed:    false,
+								Optional:    false,
+								Required:    true,
+								Description: "if the csv has a header",
+							},
+							"delimiter": schema.StringAttribute{
+								Computed:    false,
+								Optional:    false,
+								Required:    true,
+								Description: "The delimiter",
+							},
+							"quote_char": schema.StringAttribute{
+								Computed:    false,
+								Optional:    true,
+								Required:    false,
+								Description: "The quote_char",
+							},
+							"escape_char": schema.StringAttribute{
+								Computed:    false,
+								Optional:    true,
+								Required:    false,
+								Description: "The escape_char",
+							},
+							//	},
+							// },
+						},
+					},
+				},
+			},
+
 			"contact_ids": schema.ListAttribute{
 				ElementType: types.StringType,
 				Computed:    false,
@@ -119,16 +256,50 @@ func (r *dataUnitResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 
 // dataUnitResourceModel maps the resource schema data.
 type dataUnitResourceModel struct {
-	ID          types.String `tfsdk:"id"`
-	URN         types.String `tfsdk:"urn"`
-	Name        types.String `tfsdk:"name"`
-	Label       types.String `tfsdk:"label"`
-	Description types.String `tfsdk:"description"`
-	Owner       types.String `tfsdk:"owner"`
-	CreatedAt   types.String `tfsdk:"created_at"`
-	Links       types.List   `tfsdk:"links"`
-	ContactIds  types.List   `tfsdk:"contact_ids"`
-	LastUpdated types.String `tfsdk:"last_updated"`
+	ID          types.String        `tfsdk:"id"`
+	URN         types.String        `tfsdk:"urn"`
+	Name        types.String        `tfsdk:"name"`
+	Label       types.String        `tfsdk:"label"`
+	Description types.String        `tfsdk:"description"`
+	Owner       types.String        `tfsdk:"owner"`
+	CreatedAt   types.String        `tfsdk:"created_at"`
+	Links       types.List          `tfsdk:"links"`
+	ContactIds  types.List          `tfsdk:"contact_ids"`
+	LastUpdated types.String        `tfsdk:"last_updated"`
+	Config      dataUnitConfigModel `tfsdk:"config"`
+}
+
+type dataUnitConfigModel struct {
+	DataUnitType types.String                    `tfsdk:"data_unit_type"`
+	Query        *dataUnitConfigQueryModel       `tfsdk:"query"`
+	Table        *dataUnitConfigTableModel       `tfsdk:"table"`
+	Csv          *dataUnitConfigCsvModel         `tfsdk:"csv"`
+	DataProduct  *dataUnitConfigDataProductModel `tfsdk:"data_product"`
+	Parquet      *dataUnitConfigParquetModel     `tfsdk:"parquet"`
+}
+
+type dataUnitConfigQueryModel struct {
+	Query types.String `tfsdk:"query"`
+}
+
+type dataUnitConfigTableModel struct {
+	Table types.String `tfsdk:"table"`
+}
+
+type dataUnitConfigParquetModel struct {
+}
+
+type dataUnitConfigDataProductModel struct {
+	Engine types.String `tfsdk:"engine"`
+	Table  types.String `tfsdk:"table"`
+}
+
+type dataUnitConfigCsvModel struct {
+	Path       types.String `tfsdk:"path"`
+	HasHeader  types.Bool   `tfsdk:"has_header"`
+	Delimiter  types.String `tfsdk:"delimiter"`
+	QuoteChar  types.String `tfsdk:"quote_char"`
+	EscapeChar types.String `tfsdk:"escape_char"`
 }
 
 // Create a new resource.
@@ -182,21 +353,125 @@ func (r *dataUnitResource) Create(ctx context.Context, req resource.CreateReques
 	result, err := r.client.DataUnitPost(ctx, item)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating   data system",
-			"Could not create   data system, unexpected error: "+err.Error(),
+			"Error creating   data unit",
+			"Could not create   data unit, unexpected error: "+err.Error(),
 		)
 		return
 	}
-
 	//	tflog.Info(ctx, fmt.Sprintf("££ Create Post result [%s] [%s] [%s] [%s] [%s] [%s]", result.Identifier, result.Name, result.Urn, result.Description, result.Label, result.CreatedAt.String()))
-
-	plan.ID = types.StringValue(result.Identifier)
+	id := result.Identifier
+	plan.ID = types.StringValue(id)
 	plan.Name = types.StringValue(result.Name)
 	plan.URN = types.StringValue(result.Urn)
 	plan.Description = types.StringValue(result.Description)
 	plan.Label = types.StringValue(result.Label)
 	plan.CreatedAt = types.StringValue(result.CreatedAt.String())
+	// dut := dataUnitConfigTableModel{
+	// 	 Table:  types.StringValue("123"),
+	// }
+	// plan.Config.Table = &dut
+	// config
+
+	dataUnitType := plan.Config.DataUnitType.ValueString()
+	tflog.Info(ctx, dataUnitType)
+
+	tflog.Info(ctx, fmt.Sprintf("Config %v", plan.Config))
+
+	tflog.Info(ctx, fmt.Sprintf("Switch [%s] [%s] [%v]", "query", dataUnitType, (dataUnitType == "query")))
+
+	switch dataUnitType {
+	case "query":
+		tflog.Info(ctx, fmt.Sprintf("In query"))
+		request := neos.DataUnitConfigurationQueryPutRequest{
+			Configuration: neos.DataUnitConfigurationQueryConfigPutRequest{
+				DateUnitType: dataUnitType,
+				Query:        plan.Config.Query.Query.String(),
+			},
+		}
+
+		tflog.Info(ctx, fmt.Sprintf("Request %v", request))
+
+		dd, err := r.client.DataUnitConfigQueryPut(ctx, id, request)
+		if err != nil {
+			resp.Diagnostics.AddError("Error creating data unit config - query", "Could not create data unit config - query, unexpected error: "+err.Error())
+			return
+		}
+		plan.Config.Query = &dataUnitConfigQueryModel{
+			Query: types.StringValue(dd.Configuration.Query),
+		}
+	case "data_product":
+		request := neos.DataUnitConfigurationDataProductPutRequest{
+			Configuration: neos.DataUnitConfigurationDataProductConfigPutRequest{
+				DateUnitType: dataUnitType,
+				Engine:       plan.Config.DataProduct.Engine.String(),
+				Table:        plan.Config.DataProduct.Table.String(),
+			},
+		}
+		dd, err := r.client.DataUnitConfigDataProductPut(ctx, id, request)
+		if err != nil {
+			resp.Diagnostics.AddError("Error creating data unit config - data_product", "Could not create data unit config - product, unexpected error: "+err.Error())
+			return
+		}
+		plan.Config.DataProduct = &dataUnitConfigDataProductModel{
+			Engine: types.StringValue(dd.Configuration.Engine),
+			Table:  types.StringValue(dd.Configuration.Table),
+		}
+	case "table":
+		request := neos.DataUnitConfigurationTablePutRequest{
+			Configuration: neos.DataUnitConfigurationTableConfigPutRequest{
+				DateUnitType: dataUnitType,
+				Table:        plan.Config.Table.Table.String(),
+			},
+		}
+		dd, err := r.client.DataUnitConfigTablePut(ctx, id, request)
+		if err != nil {
+			resp.Diagnostics.AddError("Error creating data unit config - table", "Could not create data unit config - table, unexpected error: "+err.Error())
+			return
+		}
+		plan.Config.Table = &dataUnitConfigTableModel{
+			Table: types.StringValue(dd.Configuration.Table),
+		}
+	case "parquet":
+		request := neos.DataUnitConfigurationParquetPutRequest{
+			Configuration: neos.DataUnitConfigurationParquetConfigPutRequest{
+				DateUnitType: dataUnitType,
+			},
+		}
+		_, err := r.client.DataUnitConfigParquetPut(ctx, id, request)
+		if err != nil {
+			resp.Diagnostics.AddError("Error creating data unit config - table", "Could not create data unit config - parquet, unexpected error: "+err.Error())
+			return
+		}
+		plan.Config.Parquet = &dataUnitConfigParquetModel{}
+	case "csv":
+		request := neos.DataUnitConfigurationCSVPutRequest{
+			Configuration: neos.DataUnitConfigurationCSVConfigPutRequest{
+				DateUnitType: dataUnitType,
+				Delimiter:    plan.Config.Csv.Delimiter.String(),
+				Path:         plan.Config.Csv.Path.String(),
+				HasHeader:    plan.Config.Csv.HasHeader.ValueBool(),
+				EscapeChar:   plan.Config.Csv.EscapeChar.String(),
+				QuoteChar:    plan.Config.Csv.QuoteChar.String(),
+			},
+		}
+		dd, err := r.client.DataUnitConfigCSVPut(ctx, id, request)
+		if err != nil {
+			resp.Diagnostics.AddError("Error creating data unit config - csv", "Could not create data unit config - csv, unexpected error: "+err.Error())
+			return
+		}
+		plan.Config.Csv = &dataUnitConfigCsvModel{
+			Path:       types.StringValue(dd.Configuration.Path),
+			Delimiter:  types.StringValue(dd.Configuration.Delimiter),
+			EscapeChar: types.StringValue(dd.Configuration.EscapeChar),
+			QuoteChar:  types.StringValue(dd.Configuration.QuoteChar),
+			HasHeader:  types.BoolValue(dd.Configuration.HasHeader),
+		}
+	}
+
 	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
+
+	tflog.Info(ctx, fmt.Sprintf("Config %v", plan.Config))
+
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -227,8 +502,8 @@ func (r *dataUnitResource) Read(ctx context.Context, req resource.ReadRequest, r
 	dataUnitList, err := r.client.DataUnitGet()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading NEOS data system",
-			"Could not read NEOS  data system ID "+state.ID.ValueString()+": "+err.Error(),
+			"Error Reading NEOS data unit",
+			"Could not read NEOS  data unit ID "+state.ID.ValueString()+": "+err.Error(),
 		)
 		return
 	}
@@ -249,6 +524,9 @@ func (r *dataUnitResource) Read(ctx context.Context, req resource.ReadRequest, r
 		}
 	}
 
+	// state.Config.Table = &dataUnitConfigTableModel{
+	// 	Table: types.StringValue("xyz"),
+	// }
 	//	tsv, _ := state.ID.ToStringValue(ctx)
 	// Set refreshed state
 	//	tflog.Info(ctx, "££ READ iterate over list")
@@ -320,8 +598,8 @@ func (r *dataUnitResource) Update(ctx context.Context, req resource.UpdateReques
 	result, err := r.client.DataUnitPut(ctx, plan.ID.ValueString(), item)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error updating data system",
-			"Could not put data system, unexpected error: "+err.Error(),
+			"Error updating data unit",
+			"Could not put data unit, unexpected error: "+err.Error(),
 		)
 		return
 	}
@@ -330,8 +608,8 @@ func (r *dataUnitResource) Update(ctx context.Context, req resource.UpdateReques
 	infoResult, err := r.client.DataUnitPutInfo(ctx, plan.ID.ValueString(), eItem)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error updating data system",
-			"Could not put data system, unexpected error: "+err.Error(),
+			"Error updating data unit",
+			"Could not put data unit, unexpected error: "+err.Error(),
 		)
 		return
 	}
@@ -355,6 +633,10 @@ func (r *dataUnitResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
+	// plan.Config.Table = &dataUnitConfigTableModel{
+	// 	Table: types.StringValue("upd"),
+	// }
+
 	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
 
 	diags = resp.State.Set(ctx, plan)
@@ -377,8 +659,8 @@ func (r *dataUnitResource) Delete(ctx context.Context, req resource.DeleteReques
 	err := r.client.DataUnitDelete(ctx, plan.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error deleting data system",
-			"Could not delete data system, unexpected error: "+err.Error(),
+			"Error deleting data unit",
+			"Could not delete data unit, unexpected error: "+err.Error(),
 		)
 		return
 	}

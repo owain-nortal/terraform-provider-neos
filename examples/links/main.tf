@@ -66,6 +66,23 @@ resource "neos_data_product" "tfl-bikes-product" {
   label       = "TFR"
   links       = [""]
   contact_ids = ["jane C level", "martin C level"]
+  schema = {
+    fields = [
+      {
+        "name"        = "string"
+        "description" = "string"
+        "primary"     = false
+        "optional"    = false
+        "data_type" = {
+          "meta" = [
+            { "foo" : "base" }
+          ],
+          "column_type" : "STRING"
+        },
+        "tags" = ["string"]
+      }
+    ]
+  }
 }
 
 resource "neos_link_data_unit_data_product" "tfl_du_dp" {
@@ -113,6 +130,24 @@ resource "neos_data_product" "uk-bike-capacity-product" {
   label       = "UKC"
   links       = [""]
   contact_ids = ["bungle", "george"]
+  schema = {
+    fields = [
+      {
+        "name"        = "string"
+        "description" = "string"
+        "primary"     = false
+        "optional"    = false
+        "data_type" = {
+          "meta" = [
+            { "foo" : "base" }
+          ],
+          "column_type" : "STRING"
+        },
+        "tags" = ["string"]
+      }
+    ]
+  }
+
 }
 
 resource "neos_link_data_product_data_product" "uk_capacity" {

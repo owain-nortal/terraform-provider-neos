@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"time"
+
+	//"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -12,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/owain-nortal/neos-client-go"
-	"time"
+	//"strings"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -96,6 +99,15 @@ func (r *dataProductResource) Schema(_ context.Context, _ resource.SchemaRequest
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"builder_json": schema.StringAttribute{
+				Computed:    false,
+				Optional:    true,
+				Required:    false,
+				Description: "builder json",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"contact_ids": schema.ListAttribute{
 				ElementType: types.StringType,
 				Computed:    false,
@@ -113,27 +125,124 @@ func (r *dataProductResource) Schema(_ context.Context, _ resource.SchemaRequest
 			"last_updated": schema.StringAttribute{
 				Computed: true,
 			},
+
+			"schema": schema.SingleNestedAttribute{
+				Computed: false,
+				Optional: true,
+				Required: false,
+				Attributes: map[string]schema.Attribute{
+					"product_type": schema.StringAttribute{
+						Computed:    false,
+						Optional:    true,
+						Required:    false,
+						Description: "product type 'stored' etc",
+					},
+					"fields": schema.ListNestedAttribute{
+						Computed: false,
+						Optional: true,
+						Required: false,
+						NestedObject: schema.NestedAttributeObject{
+							Attributes: map[string]schema.Attribute{
+								"name": schema.StringAttribute{
+									Computed:    false,
+									Required:    true,
+									Optional:    false,
+									Description: "Name of the schema field",
+								},
+								"description": schema.StringAttribute{
+									Computed:    false,
+									Optional:    true,
+									Required:    false,
+									Description: "Description of the schema field",
+								},
+								// "type": schema.StringAttribute{
+								// 	Computed:    false,
+								// 	Optional:    true,
+								// 	Required:    false,
+								// 	Description: "the type of the column",
+								// },
+								"primary": schema.BoolAttribute{
+									Computed:    false,
+									Optional:    false,
+									Required:    true,
+									Description: "set the schmea field to be a primary key",
+								},
+								"optional": schema.BoolAttribute{
+									Computed:    false,
+									Optional:    false,
+									Required:    true,
+									Description: "set the schmea field to be a optional",
+								},
+								"data_type": schema.SingleNestedAttribute{
+									Computed: false,
+									Optional: true,
+									Required: false,
+									Attributes: map[string]schema.Attribute{
+										"column_type": schema.StringAttribute{
+											Computed:    false,
+											Optional:    false,
+											Required:    true,
+											Description: "set the schmea field column type",
+										},
+										"meta": schema.MapAttribute{
+											ElementType: types.StringType,
+											Computed:    false,
+											Optional:    false,
+											Required:    true,
+											// NestedObject: schema.NestedAttributeObject{
+											// 	Attributes: map[string]schema.Attribute{},
+											// },
+										},
+									},
+									Description: "set the schmea field data type",
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
 
 // dataProductResourceModel maps the resource schema data.
 type dataProductResourceModel struct {
-	ID          types.String `tfsdk:"id"`
-	URN         types.String `tfsdk:"urn"`
-	Name        types.String `tfsdk:"name"`
-	Label       types.String `tfsdk:"label"`
-	Description types.String `tfsdk:"description"`
-	Owner       types.String `tfsdk:"owner"`
-	CreatedAt   types.String `tfsdk:"created_at"`
-	Links       types.List   `tfsdk:"links"`
-	ContactIds  types.List   `tfsdk:"contact_ids"`
-	LastUpdated types.String `tfsdk:"last_updated"`
+	ID          types.String           `tfsdk:"id"`
+	URN         types.String           `tfsdk:"urn"`
+	Name        types.String           `tfsdk:"name"`
+	Label       types.String           `tfsdk:"label"`
+	Description types.String           `tfsdk:"description"`
+	Owner       types.String           `tfsdk:"owner"`
+	CreatedAt   types.String           `tfsdk:"created_at"`
+	Links       types.List             `tfsdk:"links"`
+	ContactIds  types.List             `tfsdk:"contact_ids"`
+	LastUpdated types.String           `tfsdk:"last_updated"`
+	BuilderJson types.String           `tfsdk:"builder_json"`
+	Schema      DataProductSchemaModel `tfsdk:"schema"`
+}
+
+type DataProductSchemaModel struct {
+	ProductType types.String                    `tfsdk:"product_type"`
+	Fields      []DataProductFieldResourceModel `tfsdk:"fields"`
+}
+
+type DataProductFieldResourceModel struct {
+	Name        types.String                     `tfsdk:"name"`
+	Description types.String                     `tfsdk:"description"`
+	Primary     types.Bool                       `tfsdk:"primary"`
+	Optional    types.Bool                       `tfsdk:"optional"`
+	DataType    DataProductDataTypeResourceModel `tfsdk:"data_type"`
+	//Type        types.String                     `tfsdk:"type"`
+}
+
+type DataProductDataTypeResourceModel struct {
+	Meta       types.Map    `tfsdk:"meta"`
+	ColumnType types.String `tfsdk:"column_type"`
 }
 
 // Create a new resource.
 func (r *dataProductResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	//tflog.Info(ctx, "££ Create Get plan")
+	tflog.Info(ctx, "dataProductResource Create Get plan")
 	// Retrieve values from plan
 	var plan dataProductResourceModel
 	diags := req.Plan.Get(ctx, &plan)
@@ -142,7 +251,7 @@ func (r *dataProductResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	//tflog.Info(ctx, "££ After Create Get plan")
+	tflog.Info(ctx, "dataProductResource Create building data product")
 
 	linkList, diag := plan.Links.ToListValue(ctx)
 	resp.Diagnostics.Append(diag...)
@@ -179,6 +288,7 @@ func (r *dataProductResource) Create(ctx context.Context, req resource.CreateReq
 
 	//	tflog.Info(ctx, fmt.Sprintf("££ Create Post request [%s] [%s] [%s] [%s]", plan.ID, plan.Name, plan.Label, plan.Description))
 
+	tflog.Info(ctx, "dataProductResource Create date product post")
 	result, err := r.client.DataProductPost(ctx, item)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -188,13 +298,104 @@ func (r *dataProductResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	plan.ID = types.StringValue(result.Identifier)
+	id := result.Identifier
+	tflog.Info(ctx, fmt.Sprintf("dataProductResource Create date product post id %s", id))
+	fields := []neos.DataProductSchemaFieldPutRequest{}
+
+	for _, v := range plan.Schema.Fields {
+
+		meta := make(map[string]string)
+		diag := v.DataType.Meta.ElementsAs(ctx, &meta, true)
+		if diag.HasError() {
+			tflog.Info(ctx, fmt.Sprintf("%v", diag.Errors()))
+			resp.Diagnostics.AddError("Error creating v.DataType.Meta.ToMapValue", "Error")
+			return
+		}
+
+		dataType := neos.DataProductSchemaDataTypePutRequest{
+			Meta:       meta,
+			ColumnType: v.DataType.ColumnType.ValueString(),
+		}
+
+		f := neos.DataProductSchemaFieldPutRequest{
+			Description: v.Description.ValueString(),
+			Name:        v.Name.ValueString(),
+			Primary:     v.Primary.ValueBool(),
+			Optional:    v.Optional.ValueBool(),
+			DataType:    dataType,
+		}
+		fields = append(fields, f)
+	}
+
+	schemaPutRequest := neos.DataProductSchemaPutRequest{
+		Details: neos.DataProductSchemaDetailsPutRequest{
+			ProductType: plan.Schema.ProductType.ValueString(),
+			Fields:      fields,
+		},
+	}
+
+	tflog.Info(ctx, fmt.Sprintf("dataProductResource Create schema put %s", id))
+	schemaResult, err := r.client.DataProductSchemaPut(ctx, id, schemaPutRequest)
+	if err != nil {
+		resp.Diagnostics.AddError("Error putting data product schema ", "Could not create data product schema, unexpected error: "+err.Error())
+		return
+	}
+
+	pfields := []DataProductFieldResourceModel{}
+
+	for _, v := range schemaResult.Fields {
+
+		tflog.Info(ctx, "dataProductResource into schemaResult.Fields")
+		tflog.Info(ctx, fmt.Sprintf("dataProductResource ColumnType values [%s] ", types.StringValue(v.DataType.ColumnType)))
+
+		meta := types.Map{}
+		meta, diag = types.MapValueFrom(ctx, types.StringType, v.DataType.Meta)
+		resp.Diagnostics.Append(diag...)
+		if resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("ErrorMapping values for datatype meta ", "Could not create data product schema, unexpected error: "+err.Error())
+			return
+		}
+
+		dt := DataProductDataTypeResourceModel{
+			Meta:       meta,
+			ColumnType: types.StringValue(v.DataType.ColumnType),
+		}
+
+		tflog.Info(ctx, fmt.Sprintf("dataProductResource field values [%s] [%v] [%v] [%s] ", types.StringValue(v.Name), types.BoolValue(v.Primary), types.BoolValue(v.Optional), types.StringValue(v.Description)))
+
+		i := DataProductFieldResourceModel{
+			Name:        types.StringValue(v.Name),
+			Primary:     types.BoolValue(v.Primary),
+			Optional:    types.BoolValue(v.Optional),
+			Description: types.StringValue(v.Description),
+			DataType:    dt,
+		}
+		pfields = append(pfields, i)
+	}
+
+	builderJson :=  plan.BuilderJson.ValueString()
+	tflog.Info(ctx, fmt.Sprintf("dataProductResource Create builder put %s", id))
+	_, err = r.client.DataProductBuilderPut(ctx, id, builderJson)
+	if err != nil {
+		resp.Diagnostics.AddError("Error putting data product builder ", "Could not create data product builder, unexpected error: "+err.Error())
+		return
+	}
+
+	plan.ID = types.StringValue(id)
 	plan.Name = types.StringValue(result.Name)
 	plan.URN = types.StringValue(result.Urn)
 	plan.Description = types.StringValue(result.Description)
 	plan.Label = types.StringValue(result.Label)
 	plan.CreatedAt = types.StringValue(result.CreatedAt.String())
 	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
+	plan.BuilderJson = types.StringValue(builderJson)
+	plan.Schema = DataProductSchemaModel{
+		ProductType: types.StringValue(schemaPutRequest.Details.ProductType),
+		Fields:      pfields,
+	}
+
+	// tflog.Info(ctx, fmt.Sprintf("PLAN =>>  %v ", plan.Schema.Fields[0].Tags ))
+
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -219,15 +420,12 @@ func (r *dataProductResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	foo := fmt.Sprintf("ID [%s]  Desc [%s]", state.ID.ValueString(), state.Description.ValueString())
+	foo := fmt.Sprintf("DP READ state id: [%s]  Desc [%s]", state.ID.ValueString(), state.Description.ValueString())
 	tflog.Info(ctx, foo)
 
 	dataProductList, err := r.client.DataProductGet()
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Reading NEOS data product",
-			"Could not read NEOS  data product ID "+state.ID.ValueString()+": "+err.Error(),
-		)
+		resp.Diagnostics.AddError("Error Reading NEOS data product", "Could not read NEOS  data product ID "+state.ID.ValueString()+": "+err.Error())
 		return
 	}
 
@@ -243,6 +441,22 @@ func (r *dataProductResource) Read(ctx context.Context, req resource.ReadRequest
 			state.Description = types.StringValue(ds.Description)
 			state.Owner = types.StringValue(ds.Owner)
 			state.CreatedAt = types.StringValue(ds.CreatedAt.String())
+
+			dataProductSchema, err := r.client.DataProductSchemaGet(ds.Identifier)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					"Error Reading NEOS data product",
+					"Could not read NEOS schema data product ID "+state.ID.ValueString()+": "+err.Error(),
+				)
+				return
+			}
+			dpsm, shouldReturn := convertSchemaToModel(ctx, dataProductSchema, resp)
+			if shouldReturn {
+				return
+			}
+
+			state.Schema = dpsm
+
 			break
 		}
 	}
@@ -256,8 +470,42 @@ func (r *dataProductResource) Read(ctx context.Context, req resource.ReadRequest
 
 }
 
+func convertSchemaToModel(ctx context.Context, dataProductSchema neos.DataProductSchema, resp *resource.ReadResponse) (DataProductSchemaModel, bool) {
+	fields := []DataProductFieldResourceModel{}
+	for _, v := range dataProductSchema.Fields {
+
+		meta := types.Map{}
+		meta, diag := types.MapValueFrom(ctx, types.StringType, v.DataType.Meta)
+		resp.Diagnostics.Append(diag...)
+		if resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Error Mapping values for datatype meta ", "unexpected error")
+			return DataProductSchemaModel{}, true
+		}
+
+		field := DataProductFieldResourceModel{
+			Name:        types.StringValue(v.Name),
+			Description: types.StringValue(v.Description),
+			Primary:     types.BoolValue(v.Primary),
+			Optional:    types.BoolValue(v.Optional),
+			DataType: DataProductDataTypeResourceModel{
+				ColumnType: types.StringValue(v.DataType.ColumnType),
+				Meta:       meta,
+			},
+		}
+		fields = append(fields, field)
+	}
+
+	dpsm := DataProductSchemaModel{
+		Fields: fields,
+	}
+	return dpsm, false
+}
+
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *dataProductResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+
+	tflog.Info(ctx, "dataProductResource Update called ")
+
 	var plan dataProductResourceModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -337,6 +585,92 @@ func (r *dataProductResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
+	id := result.Identifier
+
+	tflog.Info(ctx, fmt.Sprintf("dataProductResource Update date product post id %s", id))
+	fields := []neos.DataProductSchemaFieldPutRequest{}
+
+	for _, v := range plan.Schema.Fields {
+
+		meta := make(map[string]string)
+
+		diag := v.DataType.Meta.ElementsAs(ctx, &meta, true)
+		if diag.HasError() {
+			tflog.Info(ctx, fmt.Sprintf("%v", diag.Errors()))
+			resp.Diagnostics.AddError("Error creating v.DataType.Meta.ToMapValue", "Error")
+			return
+		}
+
+		dataType := neos.DataProductSchemaDataTypePutRequest{
+			Meta:       meta,
+			ColumnType: v.DataType.ColumnType.ValueString(),
+		}
+
+		f := neos.DataProductSchemaFieldPutRequest{
+			Description: v.Description.ValueString(),
+			Name:        v.Name.ValueString(),
+			Primary:     v.Primary.ValueBool(),
+			Optional:    v.Optional.ValueBool(),
+			DataType:    dataType,
+			//Type:        v.Type.ValueString(),
+			// Tags:        tags,
+		}
+		fields = append(fields, f)
+	}
+
+	schemaPutRequest := neos.DataProductSchemaPutRequest{
+		Details: neos.DataProductSchemaDetailsPutRequest{
+			ProductType: plan.Schema.ProductType.ValueString(),
+			Fields:      fields,
+		},
+	}
+
+	tflog.Info(ctx, fmt.Sprintf("dataProductResource update schema put %s", id))
+	schemaResult, err := r.client.DataProductSchemaPut(ctx, id, schemaPutRequest)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error putting data product schema ",
+			"Could not update data product schema, unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	pfields := []DataProductFieldResourceModel{}
+
+	for _, v := range schemaResult.Fields {
+		tflog.Info(ctx, fmt.Sprintf("dataProductResource ColumnType values [%s] ", types.StringValue(v.DataType.ColumnType)))
+		meta := types.Map{}
+		meta, diag = types.MapValueFrom(ctx, types.StringType, v.DataType.Meta)
+		resp.Diagnostics.Append(diag...)
+		if resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError(
+				"ErrorMapping values for datatype meta ",
+				"Could not update data product schema, unexpected error: "+err.Error(),
+			)
+			return
+		}
+
+		dt := DataProductDataTypeResourceModel{
+			Meta:       meta,
+			ColumnType: types.StringValue(v.DataType.ColumnType),
+		}
+
+		tflog.Info(ctx, fmt.Sprintf("dataProductResource field values [%s] [%v] [%v] [%s]", types.StringValue(v.Name), types.BoolValue(v.Primary), types.BoolValue(v.Optional), types.StringValue(v.Description)))
+
+		i := DataProductFieldResourceModel{
+			Name:        types.StringValue(v.Name),
+			Primary:     types.BoolValue(v.Primary),
+			Optional:    types.BoolValue(v.Optional),
+			Description: types.StringValue(v.Description),
+			DataType:    dt,
+		}
+		pfields = append(pfields, i)
+	}
+
+	plan.Schema = DataProductSchemaModel{
+		ProductType: types.StringValue(schemaPutRequest.Details.ProductType),
+		Fields:      pfields,
+	}
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -358,8 +692,7 @@ func (r *dataProductResource) Delete(ctx context.Context, req resource.DeleteReq
 
 	tflog.Info(ctx, fmt.Sprintf("DP Delete iterate plan ID: %s", id))
 
-
-	err := r.client.DataProductDelete(ctx,id)
+	err := r.client.DataProductDelete(ctx, id)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error deleting data product",

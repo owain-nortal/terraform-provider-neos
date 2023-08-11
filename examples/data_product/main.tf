@@ -28,9 +28,9 @@ output "neos_links" {
   value = data.neos_links
 }
 
-resource "neos_link_data_source_data_unit"{
+resource "neos_link_data_source_data_unit" {
   parent_identifier = "2e6841d9-349c-495d-b57b-7ae5f7fc54da"
-  child_identifier = "0493365a-80f7-4fb9-802e-1d902f8155b2"  
+  child_identifier  = "0493365a-80f7-4fb9-802e-1d902f8155b2"
 }
 
 
@@ -83,7 +83,25 @@ resource "neos_data_product" "dp-test1" {
   label       = "ODP"
   links       = var.links
   contact_ids = var.contact_ids
+  schema = {
+    fields = [
+      {
+        "name"        = "string"
+        "description" = "string"
+        "primary"     = false
+        "optional"    = false
+        "data_type" = {
+          "meta" = [
+            { "foo" : "base" }  
+          ],
+          "column_type" : "STRING"
+        },
+        "tags" = ["string"]
+      }
+    ]
+  }
 }
+
 
 resource "neos_data_unit" "du-test1" {
   name        = "OneDataUnit1"

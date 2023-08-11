@@ -1,0 +1,203 @@
+{
+    "details": {
+      "product_type": "stored",
+      "fields": [
+        {
+          "data_type": {
+            "meta": {
+              "length": 100
+            },
+            "column_type": "VARCHAR"
+          },
+          "primary": false,
+          "optional": true,
+          "name": "booking_id",
+          "type": "STRING"
+        },
+        {
+          "data_type": {
+            "meta": {
+              "length": 100
+            },
+            "column_type": "VARCHAR"
+          },
+          "primary": false,
+          "optional": true,
+          "name": "guest_id",
+          "type": "STRING"
+        },
+        {
+          "data_type": {
+            "meta": {
+              "length": 100
+            },
+            "column_type": "VARCHAR"
+          },
+          "primary": false,
+          "optional": true,
+          "name": "customer_first_name",
+          "type": "STRING"
+        },
+        {
+          "data_type": {
+            "meta": {
+              "length": 100
+            },
+            "column_type": "VARCHAR"
+          },
+          "primary": false,
+          "optional": true,
+          "name": "customer_last_name",
+          "type": "STRING"
+        },
+        {
+          "data_type": {
+            "meta": {
+              "length": 100
+            },
+            "column_type": "VARCHAR"
+          },
+          "primary": false,
+          "optional": true,
+          "name": "gender",
+          "type": "STRING"
+        },
+        {
+          "data_type": {
+            "meta": {
+              "length": 100
+            },
+            "column_type": "VARCHAR"
+          },
+          "primary": false,
+          "optional": true,
+          "name": "country",
+          "type": "STRING"
+        },
+        {
+          "data_type": {
+            "meta": {},
+            "column_type": "TIMESTAMP"
+          },
+          "primary": false,
+          "optional": true,
+          "name": "customer_check_in",
+          "type": "TIME"
+        },
+        {
+          "data_type": {
+            "meta": {},
+            "column_type": "TIMESTAMP"
+          },
+          "primary": false,
+          "optional": true,
+          "name": "customer_check_out",
+          "type": "TIME"
+        },
+        {
+          "data_type": {
+            "meta": {},
+            "column_type": "INTEGER"
+          },
+          "primary": false,
+          "optional": true,
+          "name": "length_of_stay",
+          "type": "NUMBER"
+        },
+        {
+          "data_type": {
+            "meta": {
+              "length": 100
+            },
+            "column_type": "VARCHAR"
+          },
+          "primary": false,
+          "optional": true,
+          "name": "room_type",
+          "type": "STRING"
+        },
+        {
+          "data_type": {
+            "meta": {
+              "length": 100
+            },
+            "column_type": "VARCHAR"
+          },
+          "primary": false,
+          "optional": true,
+          "name": "hotel",
+          "type": "STRING"
+        },
+        {
+          "data_type": {
+            "meta": {
+              "length": 100
+            },
+            "column_type": "VARCHAR"
+          },
+          "primary": false,
+          "optional": true,
+          "name": "ticket_category",
+          "type": "STRING"
+        },
+        {
+          "data_type": {
+            "meta": {
+              
+            },
+            "column_type": "INTEGER"
+          },
+          "primary": false,
+          "optional": true,
+          "name": "customer_age",
+          "type": "NUMBER"
+        },
+        {
+          "data_type": {
+            "meta": {
+              "length": 100
+            },
+            "column_type": "VARCHAR"
+          },
+          "primary": false,
+          "optional": true,
+          "name": "customer_type",
+          "type": "STRING"
+        },
+        {
+          "data_type": {
+            "meta": {},
+            "column_type": "TIMESTAMP"
+          },
+          "primary": false,
+          "optional": true,
+          "name": "transfer_date",
+          "type": "TIME"
+        },
+        {
+          "data_type": {
+            "meta": {
+              "length": 100
+            },
+            "column_type": "VARCHAR"
+          },
+          "primary": false,
+          "optional": true,
+          "name": "transfer_booking_id",
+          "type": "STRING"
+        },
+        {
+          "data_type": {
+            "meta": {
+              "length": 100
+            },
+            "column_type": "VARCHAR"
+          },
+          "primary": false,
+          "optional": true,
+          "name": "transport_type",
+          "type": "STRING"
+        }
+      ]
+    }
+  }
