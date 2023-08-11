@@ -520,9 +520,20 @@ func (r *dataUnitResource) Read(ctx context.Context, req resource.ReadRequest, r
 			state.Description = types.StringValue(ds.Description)
 			state.Owner = types.StringValue(ds.Owner)
 			state.CreatedAt = types.StringValue(ds.CreatedAt.String())
+
+
+
+			dataUnitConfig, err := r.client.DataUnitGetConfiguration()
+
+
+
 			break
 		}
 	}
+
+
+	
+
 
 	// state.Config.Table = &dataUnitConfigTableModel{
 	// 	Table: types.StringValue("xyz"),
