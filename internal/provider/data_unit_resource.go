@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"encoding/json"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -96,142 +97,142 @@ func (r *dataUnitResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			// "config_json": schema.StringAttribute{
-			// 	Computed:    true,
-			// 	Optional:    false,
-			// 	Required:    false,
-			// 	Description: "json that describes the configuration of the data unit",
-			// },
-
-			"config": schema.SingleNestedAttribute{
+			"config_json": schema.StringAttribute{
 				Computed:    false,
 				Optional:    true,
 				Required:    false,
-				Description: "configuration of the data unit",
-				// NestedObject: schema.NestedAttributeObject{
-				Attributes: map[string]schema.Attribute{
-
-					"data_unit_type": schema.StringAttribute{
-						Computed:    false,
-						Optional:    false,
-						Required:    true,
-						Description: "the data unit type",
-					},
-
-					"query": schema.SingleNestedAttribute{
-						Computed:    false,
-						Required:    false,
-						Optional:    true,
-						Description: "query configuration for the data unit",
-						//NestedObject: schema.NestedAttributeObject{
-						Attributes: map[string]schema.Attribute{
-							"query": schema.StringAttribute{
-								Computed:    false,
-								Optional:    false,
-								Required:    true,
-								Description: "The query to execute",
-							},
-							//},
-						},
-					},
-
-					"parquet": schema.SingleNestedAttribute{
-						Computed:    false,
-						Required:    false,
-						Optional:    true,
-						Description: "parquet configuration for the data unit",
-						//NestedObject: schema.NestedAttributeObject{
-						Attributes: map[string]schema.Attribute{
-							// "query": schema.StringAttribute{
-							// 	Computed:    false,
-							// 	Optional:    false,
-							// 	Required:    true,
-							// 	Description: "The query to execute",
-							// },
-							//},
-						},
-					},
-					"table": schema.SingleNestedAttribute{
-						Computed:    false,
-						Required:    false,
-						Optional:    true,
-						Description: "query configuration for the data unit",
-						//NestedObject: schema.NestedAttributeObject{
-						Attributes: map[string]schema.Attribute{
-							"table": schema.StringAttribute{
-								Computed:    false,
-								Optional:    false,
-								Required:    true,
-								Description: "The table name to use",
-							},
-							//	},
-						},
-					},
-					"data_product": schema.SingleNestedAttribute{
-						Computed:    false,
-						Required:    false,
-						Optional:    true,
-						Description: "data product configuration for a data unit",
-						//NestedObject: schema.NestedAttributeObject{
-						Attributes: map[string]schema.Attribute{
-							"engine": schema.StringAttribute{
-								Computed:    false,
-								Optional:    false,
-								Required:    true,
-								Description: "The engine to use",
-							},
-							"table": schema.StringAttribute{
-								Computed:    false,
-								Optional:    false,
-								Required:    true,
-								Description: "The table name to use",
-							},
-							//	},
-						},
-					},
-					"csv": schema.SingleNestedAttribute{
-						Computed:    false,
-						Required:    false,
-						Optional:    true,
-						Description: "csv configuration for a data unit",
-						//NestedObject: schema.NestedAttributeObject{
-						Attributes: map[string]schema.Attribute{
-							"path": schema.StringAttribute{
-								Computed:    false,
-								Optional:    false,
-								Required:    true,
-								Description: "The engine to use",
-							},
-							"has_header": schema.BoolAttribute{
-								Computed:    false,
-								Optional:    false,
-								Required:    true,
-								Description: "if the csv has a header",
-							},
-							"delimiter": schema.StringAttribute{
-								Computed:    false,
-								Optional:    false,
-								Required:    true,
-								Description: "The delimiter",
-							},
-							"quote_char": schema.StringAttribute{
-								Computed:    false,
-								Optional:    true,
-								Required:    false,
-								Description: "The quote_char",
-							},
-							"escape_char": schema.StringAttribute{
-								Computed:    false,
-								Optional:    true,
-								Required:    false,
-								Description: "The escape_char",
-							},
-							//	},
-							// },
-						},
-					},
-				},
+				Description: "json that describes the configuration of the data unit",
 			},
+
+			// "config": schema.SingleNestedAttribute{
+			// 	Computed:    false,
+			// 	Optional:    true,
+			// 	Required:    false,
+			// 	Description: "configuration of the data unit",
+			// 	// NestedObject: schema.NestedAttributeObject{
+			// 	Attributes: map[string]schema.Attribute{
+
+			// 		"data_unit_type": schema.StringAttribute{
+			// 			Computed:    false,
+			// 			Optional:    false,
+			// 			Required:    true,
+			// 			Description: "the data unit type",
+			// 		},
+
+			// 		"query": schema.SingleNestedAttribute{
+			// 			Computed:    false,
+			// 			Required:    false,
+			// 			Optional:    true,
+			// 			Description: "query configuration for the data unit",
+			// 			//NestedObject: schema.NestedAttributeObject{
+			// 			Attributes: map[string]schema.Attribute{
+			// 				"query": schema.StringAttribute{
+			// 					Computed:    false,
+			// 					Optional:    false,
+			// 					Required:    true,
+			// 					Description: "The query to execute",
+			// 				},
+			// 				//},
+			// 			},
+			// 		},
+
+			// 		"parquet": schema.SingleNestedAttribute{
+			// 			Computed:    false,
+			// 			Required:    false,
+			// 			Optional:    true,
+			// 			Description: "parquet configuration for the data unit",
+			// 			//NestedObject: schema.NestedAttributeObject{
+			// 			Attributes: map[string]schema.Attribute{
+			// 				// "query": schema.StringAttribute{
+			// 				// 	Computed:    false,
+			// 				// 	Optional:    false,
+			// 				// 	Required:    true,
+			// 				// 	Description: "The query to execute",
+			// 				// },
+			// 				//},
+			// 			},
+			// 		},
+			// 		"table": schema.SingleNestedAttribute{
+			// 			Computed:    false,
+			// 			Required:    false,
+			// 			Optional:    true,
+			// 			Description: "query configuration for the data unit",
+			// 			//NestedObject: schema.NestedAttributeObject{
+			// 			Attributes: map[string]schema.Attribute{
+			// 				"table": schema.StringAttribute{
+			// 					Computed:    false,
+			// 					Optional:    false,
+			// 					Required:    true,
+			// 					Description: "The table name to use",
+			// 				},
+			// 				//	},
+			// 			},
+			// 		},
+			// 		"data_product": schema.SingleNestedAttribute{
+			// 			Computed:    false,
+			// 			Required:    false,
+			// 			Optional:    true,
+			// 			Description: "data product configuration for a data unit",
+			// 			//NestedObject: schema.NestedAttributeObject{
+			// 			Attributes: map[string]schema.Attribute{
+			// 				"engine": schema.StringAttribute{
+			// 					Computed:    false,
+			// 					Optional:    false,
+			// 					Required:    true,
+			// 					Description: "The engine to use",
+			// 				},
+			// 				"table": schema.StringAttribute{
+			// 					Computed:    false,
+			// 					Optional:    false,
+			// 					Required:    true,
+			// 					Description: "The table name to use",
+			// 				},
+			// 				//	},
+			// 			},
+			// 		},
+			// 		"csv": schema.SingleNestedAttribute{
+			// 			Computed:    false,
+			// 			Required:    false,
+			// 			Optional:    true,
+			// 			Description: "csv configuration for a data unit",
+			// 			//NestedObject: schema.NestedAttributeObject{
+			// 			Attributes: map[string]schema.Attribute{
+			// 				"path": schema.StringAttribute{
+			// 					Computed:    false,
+			// 					Optional:    false,
+			// 					Required:    true,
+			// 					Description: "The engine to use",
+			// 				},
+			// 				"has_header": schema.BoolAttribute{
+			// 					Computed:    false,
+			// 					Optional:    false,
+			// 					Required:    true,
+			// 					Description: "if the csv has a header",
+			// 				},
+			// 				"delimiter": schema.StringAttribute{
+			// 					Computed:    false,
+			// 					Optional:    false,
+			// 					Required:    true,
+			// 					Description: "The delimiter",
+			// 				},
+			// 				"quote_char": schema.StringAttribute{
+			// 					Computed:    false,
+			// 					Optional:    true,
+			// 					Required:    false,
+			// 					Description: "The quote_char",
+			// 				},
+			// 				"escape_char": schema.StringAttribute{
+			// 					Computed:    false,
+			// 					Optional:    true,
+			// 					Required:    false,
+			// 					Description: "The escape_char",
+			// 				},
+			// 				//	},
+			// 				// },
+			// 			},
+			// 		},
+			// 	},
+			// },
 
 			"contact_ids": schema.ListAttribute{
 				ElementType: types.StringType,
@@ -256,51 +257,52 @@ func (r *dataUnitResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 
 // dataUnitResourceModel maps the resource schema data.
 type dataUnitResourceModel struct {
-	ID          types.String        `tfsdk:"id"`
-	URN         types.String        `tfsdk:"urn"`
-	Name        types.String        `tfsdk:"name"`
-	Label       types.String        `tfsdk:"label"`
-	Description types.String        `tfsdk:"description"`
-	Owner       types.String        `tfsdk:"owner"`
-	CreatedAt   types.String        `tfsdk:"created_at"`
-	Links       types.List          `tfsdk:"links"`
-	ContactIds  types.List          `tfsdk:"contact_ids"`
-	LastUpdated types.String        `tfsdk:"last_updated"`
-	Config      dataUnitConfigModel `tfsdk:"config"`
+	ID          types.String `tfsdk:"id"`
+	URN         types.String `tfsdk:"urn"`
+	Name        types.String `tfsdk:"name"`
+	Label       types.String `tfsdk:"label"`
+	Description types.String `tfsdk:"description"`
+	Owner       types.String `tfsdk:"owner"`
+	CreatedAt   types.String `tfsdk:"created_at"`
+	Links       types.List   `tfsdk:"links"`
+	ContactIds  types.List   `tfsdk:"contact_ids"`
+	LastUpdated types.String `tfsdk:"last_updated"`
+	ConfigJson  types.String `tfsdk:"config_json"`
+	//Config      dataUnitConfigModel `tfsdk:"config"`
 }
 
-type dataUnitConfigModel struct {
-	DataUnitType types.String                    `tfsdk:"data_unit_type"`
-	Query        *dataUnitConfigQueryModel       `tfsdk:"query"`
-	Table        *dataUnitConfigTableModel       `tfsdk:"table"`
-	Csv          *dataUnitConfigCsvModel         `tfsdk:"csv"`
-	DataProduct  *dataUnitConfigDataProductModel `tfsdk:"data_product"`
-	Parquet      *dataUnitConfigParquetModel     `tfsdk:"parquet"`
-}
+// type dataUnitConfigModel struct {
+// 	DataUnitType types.String                    `tfsdk:"data_unit_type"`
+// 	Query        *dataUnitConfigQueryModel       `tfsdk:"query"`
+// 	Table        *dataUnitConfigTableModel       `tfsdk:"table"`
+// 	Csv          *dataUnitConfigCsvModel         `tfsdk:"csv"`
+// 	DataProduct  *dataUnitConfigDataProductModel `tfsdk:"data_product"`
+// 	Parquet      *dataUnitConfigParquetModel     `tfsdk:"parquet"`
+// }
 
-type dataUnitConfigQueryModel struct {
-	Query types.String `tfsdk:"query"`
-}
+// type dataUnitConfigQueryModel struct {
+// 	Query types.String `tfsdk:"query"`
+// }
 
-type dataUnitConfigTableModel struct {
-	Table types.String `tfsdk:"table"`
-}
+// type dataUnitConfigTableModel struct {
+// 	Table types.String `tfsdk:"table"`
+// }
 
-type dataUnitConfigParquetModel struct {
-}
+// type dataUnitConfigParquetModel struct {
+// }
 
-type dataUnitConfigDataProductModel struct {
-	Engine types.String `tfsdk:"engine"`
-	Table  types.String `tfsdk:"table"`
-}
+// type dataUnitConfigDataProductModel struct {
+// 	Engine types.String `tfsdk:"engine"`
+// 	Table  types.String `tfsdk:"table"`
+// }
 
-type dataUnitConfigCsvModel struct {
-	Path       types.String `tfsdk:"path"`
-	HasHeader  types.Bool   `tfsdk:"has_header"`
-	Delimiter  types.String `tfsdk:"delimiter"`
-	QuoteChar  types.String `tfsdk:"quote_char"`
-	EscapeChar types.String `tfsdk:"escape_char"`
-}
+// type dataUnitConfigCsvModel struct {
+// 	Path       types.String `tfsdk:"path"`
+// 	HasHeader  types.Bool   `tfsdk:"has_header"`
+// 	Delimiter  types.String `tfsdk:"delimiter"`
+// 	QuoteChar  types.String `tfsdk:"quote_char"`
+// 	EscapeChar types.String `tfsdk:"escape_char"`
+// }
 
 // Create a new resource.
 func (r *dataUnitResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -372,105 +374,117 @@ func (r *dataUnitResource) Create(ctx context.Context, req resource.CreateReques
 	// plan.Config.Table = &dut
 	// config
 
-	dataUnitType := plan.Config.DataUnitType.ValueString()
-	tflog.Info(ctx, dataUnitType)
+	configJson := plan.ConfigJson.ValueString()
+	tflog.Info(ctx, fmt.Sprintf("%s", configJson))
 
-	tflog.Info(ctx, fmt.Sprintf("Config %v", plan.Config))
-
-	tflog.Info(ctx, fmt.Sprintf("Switch [%s] [%s] [%v]", "query", dataUnitType, (dataUnitType == "query")))
-
-	switch dataUnitType {
-	case "query":
-		tflog.Info(ctx, fmt.Sprintf("In query"))
-		request := neos.DataUnitConfigurationQueryPutRequest{
-			Configuration: neos.DataUnitConfigurationQueryConfigPutRequest{
-				DateUnitType: dataUnitType,
-				Query:        plan.Config.Query.Query.String(),
-			},
-		}
-
-		tflog.Info(ctx, fmt.Sprintf("Request %v", request))
-
-		dd, err := r.client.DataUnitConfigQueryPut(ctx, id, request)
-		if err != nil {
-			resp.Diagnostics.AddError("Error creating data unit config - query", "Could not create data unit config - query, unexpected error: "+err.Error())
-			return
-		}
-		plan.Config.Query = &dataUnitConfigQueryModel{
-			Query: types.StringValue(dd.Configuration.Query),
-		}
-	case "data_product":
-		request := neos.DataUnitConfigurationDataProductPutRequest{
-			Configuration: neos.DataUnitConfigurationDataProductConfigPutRequest{
-				DateUnitType: dataUnitType,
-				Engine:       plan.Config.DataProduct.Engine.String(),
-				Table:        plan.Config.DataProduct.Table.String(),
-			},
-		}
-		dd, err := r.client.DataUnitConfigDataProductPut(ctx, id, request)
-		if err != nil {
-			resp.Diagnostics.AddError("Error creating data unit config - data_product", "Could not create data unit config - product, unexpected error: "+err.Error())
-			return
-		}
-		plan.Config.DataProduct = &dataUnitConfigDataProductModel{
-			Engine: types.StringValue(dd.Configuration.Engine),
-			Table:  types.StringValue(dd.Configuration.Table),
-		}
-	case "table":
-		request := neos.DataUnitConfigurationTablePutRequest{
-			Configuration: neos.DataUnitConfigurationTableConfigPutRequest{
-				DateUnitType: dataUnitType,
-				Table:        plan.Config.Table.Table.String(),
-			},
-		}
-		dd, err := r.client.DataUnitConfigTablePut(ctx, id, request)
-		if err != nil {
-			resp.Diagnostics.AddError("Error creating data unit config - table", "Could not create data unit config - table, unexpected error: "+err.Error())
-			return
-		}
-		plan.Config.Table = &dataUnitConfigTableModel{
-			Table: types.StringValue(dd.Configuration.Table),
-		}
-	case "parquet":
-		request := neos.DataUnitConfigurationParquetPutRequest{
-			Configuration: neos.DataUnitConfigurationParquetConfigPutRequest{
-				DateUnitType: dataUnitType,
-			},
-		}
-		_, err := r.client.DataUnitConfigParquetPut(ctx, id, request)
-		if err != nil {
-			resp.Diagnostics.AddError("Error creating data unit config - table", "Could not create data unit config - parquet, unexpected error: "+err.Error())
-			return
-		}
-		plan.Config.Parquet = &dataUnitConfigParquetModel{}
-	case "csv":
-		request := neos.DataUnitConfigurationCSVPutRequest{
-			Configuration: neos.DataUnitConfigurationCSVConfigPutRequest{
-				DateUnitType: dataUnitType,
-				Delimiter:    plan.Config.Csv.Delimiter.String(),
-				Path:         plan.Config.Csv.Path.String(),
-				HasHeader:    plan.Config.Csv.HasHeader.ValueBool(),
-				EscapeChar:   plan.Config.Csv.EscapeChar.String(),
-				QuoteChar:    plan.Config.Csv.QuoteChar.String(),
-			},
-		}
-		dd, err := r.client.DataUnitConfigCSVPut(ctx, id, request)
-		if err != nil {
-			resp.Diagnostics.AddError("Error creating data unit config - csv", "Could not create data unit config - csv, unexpected error: "+err.Error())
-			return
-		}
-		plan.Config.Csv = &dataUnitConfigCsvModel{
-			Path:       types.StringValue(dd.Configuration.Path),
-			Delimiter:  types.StringValue(dd.Configuration.Delimiter),
-			EscapeChar: types.StringValue(dd.Configuration.EscapeChar),
-			QuoteChar:  types.StringValue(dd.Configuration.QuoteChar),
-			HasHeader:  types.BoolValue(dd.Configuration.HasHeader),
-		}
+	dd, err := r.client.DataUnitConfigPutBase(ctx, id, []byte(configJson))
+	if err != nil {
+		resp.Diagnostics.AddError("Error creating data unit config ", "Could not create data unit config, unexpected error: "+err.Error())
+		return
 	}
 
-	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
+	var res map[string]map[string]interface{}
+	json.Unmarshal(dd, &res)
 
-	tflog.Info(ctx, fmt.Sprintf("Config %v", plan.Config))
+	tflog.Info(ctx, fmt.Sprintf("%s", res["configuration"]["data_unit_type"]))
+
+	//dataUnitType := plan.Config.DataUnitType.ValueString()
+	//tflog.Info(ctx, dataUnitType)
+
+	//tflog.Info(ctx, fmt.Sprintf("Config %v", plan.Config))
+
+	//tflog.Info(ctx, fmt.Sprintf("Switch [%s] [%s] [%v]", "query", dataUnitType, (dataUnitType == "query")))
+
+	// switch dataUnitType {
+	// case "query":
+	// 	tflog.Info(ctx, fmt.Sprintf("In query"))
+	// 	request := neos.DataUnitConfigurationQueryPutRequest{
+	// 		Configuration: neos.DataUnitConfigurationQueryConfigPutRequest{
+	// 			DateUnitType: dataUnitType,
+	// 			Query:        plan.Config.Query.Query.String(),
+	// 		},
+	// 	}
+
+	// 	tflog.Info(ctx, fmt.Sprintf("Request %v", request))
+
+	// 	dd, err := r.client.DataUnitConfigQueryPut(ctx, id, request)
+	// 	if err != nil {
+	// 		resp.Diagnostics.AddError("Error creating data unit config - query", "Could not create data unit config - query, unexpected error: "+err.Error())
+	// 		return
+	// 	}
+	// 	plan.Config.Query = &dataUnitConfigQueryModel{
+	// 		Query: types.StringValue(dd.Configuration.Query),
+	// 	}
+	// case "data_product":
+	// 	request := neos.DataUnitConfigurationDataProductPutRequest{
+	// 		Configuration: neos.DataUnitConfigurationDataProductConfigPutRequest{
+	// 			DateUnitType: dataUnitType,
+	// 			Engine:       plan.Config.DataProduct.Engine.String(),
+	// 			Table:        plan.Config.DataProduct.Table.String(),
+	// 		},
+	// 	}
+	// 	dd, err := r.client.DataUnitConfigDataProductPut(ctx, id, request)
+	// 	if err != nil {
+	// 		resp.Diagnostics.AddError("Error creating data unit config - data_product", "Could not create data unit config - product, unexpected error: "+err.Error())
+	// 		return
+	// 	}
+	// 	plan.Config.DataProduct = &dataUnitConfigDataProductModel{
+	// 		Engine: types.StringValue(dd.Configuration.Engine),
+	// 		Table:  types.StringValue(dd.Configuration.Table),
+	// 	}
+	// case "table":
+	// 	request := neos.DataUnitConfigurationTablePutRequest{
+	// 		Configuration: neos.DataUnitConfigurationTableConfigPutRequest{
+	// 			DateUnitType: dataUnitType,
+	// 			Table:        plan.Config.Table.Table.String(),
+	// 		},
+	// 	}
+	// 	dd, err := r.client.DataUnitConfigTablePut(ctx, id, request)
+	// 	if err != nil {
+	// 		resp.Diagnostics.AddError("Error creating data unit config - table", "Could not create data unit config - table, unexpected error: "+err.Error())
+	// 		return
+	// 	}
+	// 	plan.Config.Table = &dataUnitConfigTableModel{
+	// 		Table: types.StringValue(dd.Configuration.Table),
+	// 	}
+	// case "parquet":
+	// 	request := neos.DataUnitConfigurationParquetPutRequest{
+	// 		Configuration: neos.DataUnitConfigurationParquetConfigPutRequest{
+	// 			DateUnitType: dataUnitType,
+	// 		},
+	// 	}
+	// 	_, err := r.client.DataUnitConfigParquetPut(ctx, id, request)
+	// 	if err != nil {
+	// 		resp.Diagnostics.AddError("Error creating data unit config - table", "Could not create data unit config - parquet, unexpected error: "+err.Error())
+	// 		return
+	// 	}
+	// 	plan.Config.Parquet = &dataUnitConfigParquetModel{}
+	// case "csv":
+	// 	request := neos.DataUnitConfigurationCSVPutRequest{
+	// 		Configuration: neos.DataUnitConfigurationCSVConfigPutRequest{
+	// 			DateUnitType: dataUnitType,
+	// 			Delimiter:    plan.Config.Csv.Delimiter.String(),
+	// 			Path:         plan.Config.Csv.Path.String(),
+	// 			HasHeader:    plan.Config.Csv.HasHeader.ValueBool(),
+	// 			EscapeChar:   plan.Config.Csv.EscapeChar.String(),
+	// 			QuoteChar:    plan.Config.Csv.QuoteChar.String(),
+	// 		},
+	// 	}
+	// 	dd, err := r.client.DataUnitConfigCSVPut(ctx, id, request)
+	// 	if err != nil {
+	// 		resp.Diagnostics.AddError("Error creating data unit config - csv", "Could not create data unit config - csv, unexpected error: "+err.Error())
+	// 		return
+	// 	}
+	// 	plan.Config.Csv = &dataUnitConfigCsvModel{
+	// 		Path:       types.StringValue(dd.Configuration.Path),
+	// 		Delimiter:  types.StringValue(dd.Configuration.Delimiter),
+	// 		EscapeChar: types.StringValue(dd.Configuration.EscapeChar),
+	// 		QuoteChar:  types.StringValue(dd.Configuration.QuoteChar),
+	// 		HasHeader:  types.BoolValue(dd.Configuration.HasHeader),
+	// 	}
+	// }
+
+	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -520,6 +534,18 @@ func (r *dataUnitResource) Read(ctx context.Context, req resource.ReadRequest, r
 			state.Description = types.StringValue(ds.Description)
 			state.Owner = types.StringValue(ds.Owner)
 			state.CreatedAt = types.StringValue(ds.CreatedAt.String())
+
+			dataUnitConfig, err := r.client.DataUnitConfigGetBase(ctx, ds.Identifier)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					"Error Reading NEOS data unit config",
+					"Could not read NEOS  data unit ID "+state.ID.ValueString()+": "+err.Error(),
+				)
+				return
+			}
+
+			state.ConfigJson = types.StringValue(string(dataUnitConfig))
+
 			break
 		}
 	}
@@ -627,11 +653,23 @@ func (r *dataUnitResource) Update(ctx context.Context, req resource.UpdateReques
 	plan.ContactIds = contactsList
 	plan.Links = linksList
 	plan.Owner = types.StringValue(infoResult.Owner)
-	diags = resp.State.Set(ctx, plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
+
+	configJson := plan.ConfigJson.ValueString()
+	tflog.Info(ctx, fmt.Sprintf("%s", configJson))
+
+	dd, err := r.client.DataUnitConfigPutBase(ctx, result.Identifier, []byte(configJson))
+	if err != nil {
+		resp.Diagnostics.AddError("Error updating data unit config ", "Could not update data unit config, unexpected error: "+err.Error())
 		return
 	}
+
+	var res map[string]map[string]interface{}
+	json.Unmarshal(dd, &res)
+
+	plan.ConfigJson = types.StringValue(configJson)
+	//tflog.Info(ctx, fmt.Sprintf("%s", res["configuration"]["data_unit_type"]))
+
+	
 
 	// plan.Config.Table = &dataUnitConfigTableModel{
 	// 	Table: types.StringValue("upd"),

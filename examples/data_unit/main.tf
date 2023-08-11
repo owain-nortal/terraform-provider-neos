@@ -58,6 +58,10 @@ variable "contact_ids" {
   default = ["contacts1", "contacts2"]
 }
 
+
+
+
+
 # resource "neos_data_system" "ds-test1" {
 #   name        = "OneTestDataSystem1"
 #   description = "desc test data system 1"
@@ -103,83 +107,93 @@ variable "contact_ids" {
 # }
 
 
-resource "neos_data_unit" "du-query" {
-  name        = "DUQuery"
+
+
+
+resource "neos_data_unit" "du-json" {
+  name        = "DUJSON"
   description = "desc test data unit 1"
   owner       = "data unit owner"
-  label       = "Q01"
+  label       = "DUJ"
   links       = var.links
   contact_ids = var.contact_ids
-  config = {
-    data_unit_type = "query"
-    query = {
-      query = "select * from users;"
+  config_json = <<EOH
+    {
+        "configuration": {
+            "data_unit_type": "csv",
+            "path": "/some/path",
+            "has_header": true,
+            "delimiter": ";",
+            "quote_char": "'",
+            "escape_char": "/"
+        }
     }
-  }
+
+  EOH
 }
 
-resource "neos_data_unit" "du-table" {
-  name        = "DUTable"
-  description = "desc test data unit 1"
-  owner       = "data unit owner"
-  label       = "T01"
-  links       = var.links
-  contact_ids = var.contact_ids
-  config = {
-    data_unit_type = "table"
-    table = {
-      table = "users"
-    }
-  }
-}
+# resource "neos_data_unit" "du-table" {
+#   name        = "DUTable"
+#   description = "desc test data unit 1"
+#   owner       = "data unit owner"
+#   label       = "T01"
+#   links       = var.links
+#   contact_ids = var.contact_ids
+#   config = {
+#     data_unit_type = "table"
+#     table = {
+#       table = "users"
+#     }
+#   }
+# }
 
-resource "neos_data_unit" "du-csv" {
-  name        = "DUCSV"
-  description = "desc test data unit 1"
-  owner       = "data unit owner"
-  label       = "CSV"
-  links       = var.links
-  contact_ids = var.contact_ids
-  config = {
-    data_unit_type = "csv"
-    csv = {
-      path        = "/some/path"
-      delimiter   = ","
-      has_header  = true
-      escape_char = "/"
-      quote_char  = "'"
-    }
-  }
-}
+# resource "neos_data_unit" "du-csv" {
+#   name        = "DUCSV"
+#   description = "desc test data unit 1"
+#   owner       = "data unit owner"
+#   label       = "CSV"
+#   links       = var.links
+#   contact_ids = var.contact_ids
+#   config = {
+#     data_unit_type = "csv"
+#     csv = {
+#       path        = "/some/path"
+#       delimiter   = ","
+#       has_header  = true
+#       escape_char = "/"
+#       quote_char  = "'"
+#     }
+#   }
+# }
 
-resource "neos_data_unit" "du-parquet" {
-  name        = "DUParquet"
-  description = "desc test data unit 1"
-  owner       = "data unit owner"
-  label       = "PAR"
-  links       = var.links
-  contact_ids = var.contact_ids
-  config = {
-    data_unit_type = "parquet"
-    parquet        = {}
-  }
-}
+# resource "neos_data_unit" "du-parquet" {
+#   name        = "DUParquet"
+#   description = "desc test data unit 1"
+#   owner       = "data unit owner"
+#   label       = "PAR"
+#   links       = var.links
+#   contact_ids = var.contact_ids
+#   config = {
+#     data_unit_type = "parquet"
+#     parquet        = {}
+#   }
+# }
 
-resource "neos_data_unit" "du-data_product" {
-  name        = "DU-DP"
-  description = "desc test data unit 1"
-  owner       = "data unit owner"
-  label       = "DP1"
-  links       = var.links
-  contact_ids = var.contact_ids
-  config = {
-    data_unit_type = "data_product"
-    data_product = {
-      engine = "postgres"
-      table  = "some-table"
-    }
-  }
-}
+# resource "neos_data_unit" "du-data_product" {
+#   name        = "DU-DP"
+#   description = "desc test data unit 1"
+#   owner       = "data unit owner"
+#   label       = "DP1"
+#   links       = var.links
+#   contact_ids = var.contact_ids
+#   config = {
+#     data_unit_type = "data_product"
+#     data_product = {
+#       engine = "postgres"
+#       table  = "some-table"
+#     }
+#   }
+# }
 # resource "neos_data_unit" "du-test1" {
 #   name        = "OneDataUnit1"
 #   description = "desc test data unit 1"
