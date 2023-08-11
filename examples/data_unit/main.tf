@@ -21,8 +21,14 @@ provider "neos" {
 }
 //data "neos_links" "links" {}
 
-# data "neos_registry_core" "cores" {
-# }
+data "neos_data_unit" "data_units" {
+}
+
+
+output "data_unit" {
+  value = data.neos_data_unit.data_units
+}
+
 
 # output "neos_links" {
 #   value = data.neos_links
@@ -105,7 +111,6 @@ variable "contact_ids" {
 #     ]
 #   }
 # }
-
 
 
 

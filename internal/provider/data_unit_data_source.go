@@ -48,6 +48,15 @@ func (d *dataUnitDataSourceV2) Read(ctx context.Context, req datasource.ReadRequ
 
 	// Map response body to model
 	for _, ds := range list.Entities {
+
+		configJson, err := d.client.DataUnitConfigGetBase(ctx, ds.Identifier)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Unable to Read Data System List",
+				err.Error(),
+			)
+			return
+		}
 		dataUnitState := DataUnitModelV2{
 			Identifier:  types.StringValue(ds.Identifier),
 			Name:        types.StringValue(ds.Name),
@@ -55,9 +64,10 @@ func (d *dataUnitDataSourceV2) Read(ctx context.Context, req datasource.ReadRequ
 			Label:       types.StringValue(ds.Label),
 			Owner:       types.StringValue(ds.Owner),
 			Urn:         types.StringValue(ds.Urn),
+			ConfigJson:  types.StringValue(string(configJson)),
 		}
 		tflog.Info(ctx, fmt.Sprintf("NEOS - ID: %s ", ds.Identifier))
-		state.DataUnits = append(state.DataUnits, dataUnitState)
+		state.Entities = append(state.Entities, dataUnitState)
 	}
 
 	// Set state
@@ -93,7 +103,7 @@ func (d *dataUnitDataSourceV2) Configure(ctx context.Context, req datasource.Con
 func (d *dataUnitDataSourceV2) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"datasystems": schema.ListNestedAttribute{
+			"entities": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
@@ -118,6 +128,12 @@ func (d *dataUnitDataSourceV2) Schema(_ context.Context, _ datasource.SchemaRequ
 						"owner": schema.StringAttribute{
 							Computed: true,
 						},
+						"config_json": schema.StringAttribute{
+							Computed: true,
+							//Optional:    true,
+							//Required:    false,
+							//Description: "json that describes the configuration of the data unit",
+						},
 						"state": schema.SingleNestedAttribute{
 							Computed: true,
 							Attributes: map[string]schema.Attribute{
@@ -137,19 +153,20 @@ func (d *dataUnitDataSourceV2) Schema(_ context.Context, _ datasource.SchemaRequ
 }
 
 type DataUnitDataSourceModelV2 struct {
-	DataUnits []DataUnitModelV2 `tfsdk:"dataunit"`
+	Entities []DataUnitModelV2 `tfsdk:"entities"`
 }
 
 // coffeesModel maps coffees schema data.
 type DataUnitModelV2 struct {
-	Identifier  types.String           `tfsdk:"id"`
-	Urn         types.String           `tfsdk:"urn"`
-	Name        types.String           `tfsdk:"name"`
-	Description types.String           `tfsdk:"description"`
-	Label       types.String           `tfsdk:"label"`
-	Owner       types.String           `tfsdk:"owner"`
-	CreatedAt   types.String           `tfsdk:"created_at"`
+	Identifier  types.String         `tfsdk:"id"`
+	Urn         types.String         `tfsdk:"urn"`
+	Name        types.String         `tfsdk:"name"`
+	Description types.String         `tfsdk:"description"`
+	Label       types.String         `tfsdk:"label"`
+	Owner       types.String         `tfsdk:"owner"`
+	CreatedAt   types.String         `tfsdk:"created_at"`
 	State       DataUnitStateModelV2 `tfsdk:"state"`
+	ConfigJson  types.String         `tfsdk:"config_json"`
 }
 
 type DataUnitStateModelV2 struct {

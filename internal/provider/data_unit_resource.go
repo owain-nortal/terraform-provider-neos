@@ -42,6 +42,15 @@ func (r *dataUnitResource) Metadata(_ context.Context, req resource.MetadataRequ
 	resp.TypeName = req.ProviderTypeName + "_data_unit"
 }
 
+func (r *dataUnitResource) JSONRemarshal(bytes []byte) ([]byte, error) {
+	var ifce interface{}
+	err := json.Unmarshal(bytes, &ifce)
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(ifce)
+}
+
 // Schema defines the schema for the resource.
 func (r *dataUnitResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
@@ -377,11 +386,18 @@ func (r *dataUnitResource) Create(ctx context.Context, req resource.CreateReques
 	configJson := plan.ConfigJson.ValueString()
 	tflog.Info(ctx, fmt.Sprintf("%s", configJson))
 
-	dd, err := r.client.DataUnitConfigPutBase(ctx, id, []byte(configJson))
+	ordered, err := r.JSONRemarshal([]byte(configJson))
+	if err != nil {
+		resp.Diagnostics.AddError("Error ordering data unit config ", "unexpected error: "+err.Error())
+		return
+	}
+	dd, err := r.client.DataUnitConfigPutBase(ctx, id, ordered)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating data unit config ", "Could not create data unit config, unexpected error: "+err.Error())
 		return
 	}
+
+	plan.ConfigJson = types.StringValue(string(ordered))
 
 	var res map[string]map[string]interface{}
 	json.Unmarshal(dd, &res)
@@ -544,7 +560,13 @@ func (r *dataUnitResource) Read(ctx context.Context, req resource.ReadRequest, r
 				return
 			}
 
-			state.ConfigJson = types.StringValue(string(dataUnitConfig))
+			ordered, err := r.JSONRemarshal([]byte(dataUnitConfig))
+			if err != nil {
+				resp.Diagnostics.AddError("Error ordering data unit config ", "unexpected error: "+err.Error())
+				return
+			}
+
+			state.ConfigJson = types.StringValue(string(ordered))
 
 			break
 		}
@@ -657,7 +679,13 @@ func (r *dataUnitResource) Update(ctx context.Context, req resource.UpdateReques
 	configJson := plan.ConfigJson.ValueString()
 	tflog.Info(ctx, fmt.Sprintf("%s", configJson))
 
-	dd, err := r.client.DataUnitConfigPutBase(ctx, result.Identifier, []byte(configJson))
+	ordered, err := r.JSONRemarshal([]byte(configJson))
+	if err != nil {
+		resp.Diagnostics.AddError("Error ordering data unit config ", "unexpected error: "+err.Error())
+		return
+	}
+
+	dd, err := r.client.DataUnitConfigPutBase(ctx, result.Identifier, []byte(ordered))
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating data unit config ", "Could not update data unit config, unexpected error: "+err.Error())
 		return
@@ -668,8 +696,6 @@ func (r *dataUnitResource) Update(ctx context.Context, req resource.UpdateReques
 
 	plan.ConfigJson = types.StringValue(configJson)
 	//tflog.Info(ctx, fmt.Sprintf("%s", res["configuration"]["data_unit_type"]))
-
-	
 
 	// plan.Config.Table = &dataUnitConfigTableModel{
 	// 	Table: types.StringValue("upd"),
