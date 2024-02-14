@@ -2,8 +2,8 @@ package provider
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-
 	"time"
 
 	//"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -30,7 +30,8 @@ func NewDataProductResource() resource.Resource {
 
 // dataProductResource is the resource implementation.
 type dataProductResource struct {
-	client *neos.NeosClient
+	client *neos.DataProductClient
+	schemaClient *neos.DataProductSchemaClient
 }
 
 var (
@@ -289,12 +290,9 @@ func (r *dataProductResource) Create(ctx context.Context, req resource.CreateReq
 	//	tflog.Info(ctx, fmt.Sprintf("££ Create Post request [%s] [%s] [%s] [%s]", plan.ID, plan.Name, plan.Label, plan.Description))
 
 	tflog.Info(ctx, "dataProductResource Create date product post")
-	result, err := r.client.DataProductPost(ctx, item)
+	result, err := r.client.Post(ctx, item)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating   data product",
-			"Could not create   data product, unexpected error: "+err.Error(),
-		)
+		resp.Diagnostics.AddError("Error creating data product", "Could not create data product, unexpected error: "+err.Error())
 		return
 	}
 
@@ -335,7 +333,7 @@ func (r *dataProductResource) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	tflog.Info(ctx, fmt.Sprintf("dataProductResource Create schema put %s", id))
-	schemaResult, err := r.client.DataProductSchemaPut(ctx, id, schemaPutRequest)
+	schemaResult, err := r.schemaClient.Put(ctx, id, schemaPutRequest)
 	if err != nil {
 		resp.Diagnostics.AddError("Error putting data product schema ", "Could not create data product schema, unexpected error: "+err.Error())
 		return
@@ -373,12 +371,22 @@ func (r *dataProductResource) Create(ctx context.Context, req resource.CreateReq
 		pfields = append(pfields, i)
 	}
 
-	builderJson :=  plan.BuilderJson.ValueString()
-	tflog.Info(ctx, fmt.Sprintf("dataProductResource Create builder put %s", id))
-	_, err = r.client.DataProductBuilderPut(ctx, id, builderJson)
-	if err != nil {
-		resp.Diagnostics.AddError("Error putting data product builder ", "Could not create data product builder, unexpected error: "+err.Error())
-		return
+	builderJson := plan.BuilderJson.ValueString()
+	if builderJson != "" {
+		if json.Valid([]byte(builderJson)) {
+			tflog.Info(ctx, fmt.Sprintf("dataProductResource Create builder put %s", id))
+			_, err = r.client.DataProductBuilderPut(ctx, id, builderJson)
+			if err != nil {
+				resp.Diagnostics.AddError("Error putting data product builder ", "Could not create data product builder, unexpected error: "+err.Error())
+				return
+			}
+			plan.BuilderJson = types.StringValue(builderJson)
+		} else {
+			resp.Diagnostics.AddError("Error invalid json data product builder ", "the builder json is invalid")
+			return
+		}
+	} else {
+		tflog.Info(ctx, "dataProductResource no builder json found ")
 	}
 
 	plan.ID = types.StringValue(id)
@@ -388,7 +396,7 @@ func (r *dataProductResource) Create(ctx context.Context, req resource.CreateReq
 	plan.Label = types.StringValue(result.Label)
 	plan.CreatedAt = types.StringValue(result.CreatedAt.String())
 	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
-	plan.BuilderJson = types.StringValue(builderJson)
+
 	plan.Schema = DataProductSchemaModel{
 		ProductType: types.StringValue(schemaPutRequest.Details.ProductType),
 		Fields:      pfields,
@@ -423,7 +431,7 @@ func (r *dataProductResource) Read(ctx context.Context, req resource.ReadRequest
 	foo := fmt.Sprintf("DP READ state id: [%s]  Desc [%s]", state.ID.ValueString(), state.Description.ValueString())
 	tflog.Info(ctx, foo)
 
-	dataProductList, err := r.client.DataProductGet()
+	dataProductList, err := r.client.Get()
 	if err != nil {
 		resp.Diagnostics.AddError("Error Reading NEOS data product", "Could not read NEOS  data product ID "+state.ID.ValueString()+": "+err.Error())
 		return
@@ -442,7 +450,7 @@ func (r *dataProductResource) Read(ctx context.Context, req resource.ReadRequest
 			state.Owner = types.StringValue(ds.Owner)
 			state.CreatedAt = types.StringValue(ds.CreatedAt.String())
 
-			dataProductSchema, err := r.client.DataProductSchemaGet(ds.Identifier)
+			dataProductSchema, err := r.schemaClient.Get(ds.Identifier)
 			if err != nil {
 				resp.Diagnostics.AddError(
 					"Error Reading NEOS data product",
@@ -548,7 +556,7 @@ func (r *dataProductResource) Update(ctx context.Context, req resource.UpdateReq
 		Links:      links,
 	}
 
-	result, err := r.client.DataProductPut(ctx, plan.ID.ValueString(), item)
+	result, err := r.client.Put(ctx, plan.ID.ValueString(), item)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating data product",
@@ -626,7 +634,7 @@ func (r *dataProductResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	tflog.Info(ctx, fmt.Sprintf("dataProductResource update schema put %s", id))
-	schemaResult, err := r.client.DataProductSchemaPut(ctx, id, schemaPutRequest)
+	schemaResult, err := r.schemaClient.Put(ctx, id, schemaPutRequest)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error putting data product schema ",
@@ -692,7 +700,7 @@ func (r *dataProductResource) Delete(ctx context.Context, req resource.DeleteReq
 
 	tflog.Info(ctx, fmt.Sprintf("DP Delete iterate plan ID: %s", id))
 
-	err := r.client.DataProductDelete(ctx, id)
+	err := r.client.Delete(ctx, id)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error deleting data product",
@@ -708,7 +716,7 @@ func (r *dataProductResource) Configure(_ context.Context, req resource.Configur
 		return
 	}
 
-	client, ok := req.ProviderData.(*neos.NeosClient)
+	client, ok := req.ProviderData.(*neos.DataProductClient)
 
 	if !ok {
 		resp.Diagnostics.AddError(
@@ -720,6 +728,19 @@ func (r *dataProductResource) Configure(_ context.Context, req resource.Configur
 	}
 
 	r.client = client
+
+	schemaClient, ok := req.ProviderData.(*neos.DataProductSchemaClient)
+
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Data Source Configure Type",
+			fmt.Sprintf("Expected *neos.DataProductClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+		return
+	}
+
+	r.schemaClient = schemaClient
 }
 
 func (r *dataProductResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

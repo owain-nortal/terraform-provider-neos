@@ -21,7 +21,7 @@ var (
 )
 
 type outputDataSourceV2 struct {
-	client *neos.NeosClient
+	client *neos.OutputClient
 }
 
 func (d *outputDataSourceV2) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -34,7 +34,7 @@ func (d *outputDataSourceV2) Read(ctx context.Context, req datasource.ReadReques
 
 	var state OutputDataSourceModelV2
 
-	list, err := d.client.OutputGet()
+	list, err := d.client.Get()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read Data System List",
@@ -79,7 +79,7 @@ func (d *outputDataSourceV2) Configure(ctx context.Context, req datasource.Confi
 		return
 	}
 
-	client, ok := req.ProviderData.(*neos.NeosClient)
+	client, ok := req.ProviderData.(*neos.OutputClient)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",

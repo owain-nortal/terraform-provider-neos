@@ -27,7 +27,7 @@ func NewOutputResource() resource.Resource {
 
 // outputResource is the resource implementation.
 type outputResource struct {
-	client *neos.NeosClient
+	client *neos.OutputClient
 }
 
 var (
@@ -187,7 +187,7 @@ func (r *outputResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	//	tflog.Info(ctx, fmt.Sprintf("££ Create Post request [%s] [%s] [%s] [%s]", plan.ID, plan.Name, plan.Label, plan.Description))
 
-	result, err := r.client.OutputPost(ctx, item)
+	result, err := r.client.Post(ctx, item)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating   output",
@@ -233,7 +233,7 @@ func (r *outputResource) Read(ctx context.Context, req resource.ReadRequest, res
 	foo := fmt.Sprintf("ID [%s]  Desc [%s]", state.ID.ValueString(), state.Description.ValueString())
 	tflog.Info(ctx, foo)
 
-	outputList, err := r.client.OutputGet()
+	outputList, err := r.client.Get()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading NEOS output",
@@ -328,7 +328,7 @@ func (r *outputResource) Update(ctx context.Context, req resource.UpdateRequest,
 		Links:      links,
 	}
 
-	result, err := r.client.OutputPut(ctx, plan.ID.ValueString(), item)
+	result, err := r.client.Put(ctx, plan.ID.ValueString(), item)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating output",
@@ -338,7 +338,7 @@ func (r *outputResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 	//tflog.Info(ctx, fmt.Sprintf("££ Create Post result [%s] [%s] [%s] [%s] [%s] [%s]", result.Identifier, result.Name, result.Urn, result.Description, result.Label, result.CreatedAt.String()))
 
-	infoResult, err := r.client.OutputPutInfo(ctx, plan.ID.ValueString(), eItem)
+	infoResult, err := r.client.PutInfo(ctx, plan.ID.ValueString(), eItem)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating output",
@@ -386,7 +386,7 @@ func (r *outputResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
-	err := r.client.OutputDelete(ctx, plan.ID.ValueString())
+	err := r.client.Delete(ctx, plan.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error deleting output",
@@ -402,7 +402,7 @@ func (r *outputResource) Configure(_ context.Context, req resource.ConfigureRequ
 		return
 	}
 
-	client, ok := req.ProviderData.(*neos.NeosClient)
+	client, ok := req.ProviderData.(*neos.OutputClient)
 
 	if !ok {
 		resp.Diagnostics.AddError(

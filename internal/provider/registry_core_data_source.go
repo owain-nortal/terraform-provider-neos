@@ -20,7 +20,7 @@ var (
 )
 
 type registryCoreDataSource struct {
-	client *neos.NeosClient
+	client *neos.RegistryCoreClient
 }
 
 func (d *registryCoreDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -35,7 +35,7 @@ func (d *registryCoreDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	state.RegistryCores[0].ID = types.StringValue("00000000-0000-0000-0000-000000000000")
 
-	list, err := d.client.RegistryCoreGet()
+	list, err := d.client.Get()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to read registry core List",
@@ -76,7 +76,9 @@ func (d *registryCoreDataSource) Configure(ctx context.Context, req datasource.C
 		return
 	}
 
-	client, ok := req.ProviderData.(*neos.NeosClient)
+	var client *neos.NeosClient
+	var ok bool
+	client, ok = req.ProviderData.(*neos.NeosClient)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
@@ -86,7 +88,7 @@ func (d *registryCoreDataSource) Configure(ctx context.Context, req datasource.C
 		return
 	}
 
-	d.client = client
+	d.client = &client.RegistryCoreClient
 }
 
 func (d *registryCoreDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -108,6 +110,12 @@ func (d *registryCoreDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 						"id": schema.StringAttribute{
 							Computed: true,
 						},
+						// "access_key_id": schema.StringAttribute{
+						// 	Computed: true,
+						// },
+						// "secret_key": schema.StringAttribute{
+						// 	Computed: true,
+						// },
 					},
 				},
 			},

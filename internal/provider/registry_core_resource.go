@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/owain-nortal/neos-client-go"
-	"time"
+	//"time"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -24,7 +24,7 @@ func NewRegistryCoreResource() resource.Resource {
 
 // registryCoreResource is the resource implementation.
 type registryCoreResource struct {
-	client *neos.NeosClient
+	client *neos.RegistryCoreClient
 }
 
 var (
@@ -51,11 +51,20 @@ func (r *registryCoreResource) Schema(_ context.Context, _ resource.SchemaReques
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"access_key": schema.StringAttribute{
+			"access_key_id": schema.StringAttribute{
 				Computed:    true,
 				Required:    false,
 				Optional:    false,
-				Description: "The access key",
+				Description: "The access key id",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"secret_key": schema.StringAttribute{
+				Computed:    true,
+				Required:    false,
+				Optional:    false,
+				Description: "The secret access key ",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -90,9 +99,9 @@ func (r *registryCoreResource) Schema(_ context.Context, _ resource.SchemaReques
 				Optional:    false,
 				Description: "The name of the partition",
 			},
-			"last_updated": schema.StringAttribute{
-				Computed: true,
-			},
+			// "last_updated": schema.StringAttribute{
+			// 	Computed: true,
+			// },
 		},
 	}
 }
@@ -100,12 +109,13 @@ func (r *registryCoreResource) Schema(_ context.Context, _ resource.SchemaReques
 // registryCoreResourceModel maps the resource schema data.
 type registryCoreResourceModel struct {
 	Identifier  types.String `tfsdk:"identifier"`
-	AccessKey   types.String `tfsdk:"access_key"`
+	AccessKeyId types.String `tfsdk:"access_key_id"`
+	SecretKey   types.String `tfsdk:"secret_key"`
 	URN         types.String `tfsdk:"urn"`
 	Name        types.String `tfsdk:"name"`
 	Host        types.String `tfsdk:"host"`
 	Partition   types.String `tfsdk:"partition"`
-	LastUpdated types.String `tfsdk:"last_updated"`
+	//LastUpdated types.String `tfsdk:"last_updated"`
 }
 
 // Create a new resource.
@@ -128,7 +138,7 @@ func (r *registryCoreResource) Create(ctx context.Context, req resource.CreateRe
 
 	//	tflog.Info(ctx, fmt.Sprintf("££ Create Post request [%s] [%s] [%s] [%s]", plan.ID, plan.Name, plan.Label, plan.Description))
 
-	result, err := r.client.RegistryCorePost(ctx, item)
+	result, err := r.client.Post(ctx, item)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating registry entry for core",
@@ -140,9 +150,10 @@ func (r *registryCoreResource) Create(ctx context.Context, req resource.CreateRe
 	//	tflog.Info(ctx, fmt.Sprintf("££ Create Post result [%s] [%s] [%s] [%s] [%s] [%s]", result.Identifier, result.Name, result.Urn, result.Description, result.Label, result.CreatedAt.String()))
 
 	plan.Identifier = types.StringValue(result.Identifier)
-	plan.AccessKey = types.StringValue(result.AccessKey)
+	plan.AccessKeyId = types.StringValue(result.KeyPair.AccessKeyID)
+	plan.SecretKey = types.StringValue(result.KeyPair.SecretAccessKey)
 	plan.URN = types.StringValue(result.Urn)
-	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
+	//plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -162,7 +173,7 @@ func (r *registryCoreResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	dataSystemList, err := r.client.RegistryCoreGet()
+	dataSystemList, err := r.client.Get()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading NEOS cores from registry",
@@ -254,7 +265,7 @@ func (r *registryCoreResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
+	//plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -266,6 +277,8 @@ func (r *registryCoreResource) Update(ctx context.Context, req resource.UpdateRe
 // Delete deletes the resource and removes the Terraform state on success.
 func (r *registryCoreResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 
+	tflog.Info(ctx, "registryCoreResource delete")
+
 	var plan registryCoreResourceModel
 	diags := req.State.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -273,11 +286,12 @@ func (r *registryCoreResource) Delete(ctx context.Context, req resource.DeleteRe
 		return
 	}
 
-	rcdr := neos.RegistryCoreDeleteRequest{
-		Urn: plan.URN.ValueString(),
-	}
+	// rcdr := neos.RegistryCoreDeleteRequest{
+	// 	Id: ,
+	// }
+	tflog.Info(ctx, fmt.Sprintf("registryCoreResource delete id %s", plan.Identifier.ValueString()))
 
-	err := r.client.RegistryCoreDelete(ctx, rcdr)
+	err := r.client.Delete(ctx, plan.Identifier.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error deleting core from registry",
@@ -304,7 +318,7 @@ func (r *registryCoreResource) Configure(_ context.Context, req resource.Configu
 		return
 	}
 
-	r.client = client
+	r.client = &client.RegistryCoreClient
 }
 
 func (r *registryCoreResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

@@ -19,7 +19,7 @@ func NewLinkDataProductDataProductResource() resource.Resource {
 }
 
 type linkDataProductDataProductResource struct {
-	client *neos.NeosClient
+	client *neos.LinksClient
 }
 
 var (
@@ -81,7 +81,7 @@ func (r *linkDataProductDataProductResource) Create(ctx context.Context, req res
 
 	tflog.Info(ctx, fmt.Sprintf("linkDataProductDataProductResource Create Post request [%s] [%s]", plan.ParentIdentifier.ValueString(), plan.ChildIdentifier.ValueString()))
 
-	result, err := r.client.LinkDataProductDataProductPost(ctx, plan.ParentIdentifier.ValueString(), plan.ChildIdentifier.ValueString())
+	result, err := r.client.LinkDataProductToDataProduct(ctx, plan.ParentIdentifier.ValueString(), plan.ChildIdentifier.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating link",
@@ -117,7 +117,7 @@ func (r *linkDataProductDataProductResource) Read(ctx context.Context, req resou
 
 	tflog.Info(ctx, fmt.Sprintf("linkDataProductDataProductResource Parent ID [%s]  Desc [%s]", state.ParentIdentifier.ValueString(), state.ChildIdentifier.ValueString()))
 
-	linksList, err := r.client.LinksGet()
+	linksList, err := r.client.Get()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading NEOS data system",
@@ -155,7 +155,7 @@ func (r *linkDataProductDataProductResource) Update(ctx context.Context, req res
 		return
 	}
 
-	result, err := r.client.LinkDataProductDataProductPost(ctx, plan.ParentIdentifier.ValueString(), plan.ChildIdentifier.String())
+	result, err := r.client.LinkDataProductToDataProduct(ctx, plan.ParentIdentifier.ValueString(), plan.ChildIdentifier.String())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating link",
@@ -191,7 +191,7 @@ func (r *linkDataProductDataProductResource) Delete(ctx context.Context, req res
 		return
 	}
 
-	err := r.client.LinkDataProductDataProductDelete(ctx, plan.ParentIdentifier.ValueString(), plan.ChildIdentifier.ValueString())
+	err := r.client.DeleteLinkDataProductToDataProduct(ctx, plan.ParentIdentifier.ValueString(), plan.ChildIdentifier.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting link", "Could not delete link, unexpected error: "+err.Error())
 		return
@@ -204,7 +204,7 @@ func (r *linkDataProductDataProductResource) Configure(_ context.Context, req re
 		return
 	}
 
-	client, ok := req.ProviderData.(*neos.NeosClient)
+	client, ok := req.ProviderData.(*neos.LinksClient)
 
 	if !ok {
 		resp.Diagnostics.AddError("Unexpected Data Source Configure Type", fmt.Sprintf("Expected *neos.LinkDataProductDataProductClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))

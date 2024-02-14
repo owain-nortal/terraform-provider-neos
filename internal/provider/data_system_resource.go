@@ -27,7 +27,7 @@ func NewDataSystemResource() resource.Resource {
 
 // dataSystemResource is the resource implementation.
 type dataSystemResource struct {
-	client *neos.NeosClient
+	client *neos.DataSystemClient
 }
 
 var (
@@ -179,7 +179,7 @@ func (r *dataSystemResource) Create(ctx context.Context, req resource.CreateRequ
 
 	//	tflog.Info(ctx, fmt.Sprintf("££ Create Post request [%s] [%s] [%s] [%s]", plan.ID, plan.Name, plan.Label, plan.Description))
 
-	result, err := r.client.DataSystemPost(ctx, item)
+	result, err := r.client.Post(ctx, item)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating   data system",
@@ -224,7 +224,7 @@ func (r *dataSystemResource) Read(ctx context.Context, req resource.ReadRequest,
 	foo := fmt.Sprintf("ID [%s]  Desc [%s]", state.ID.ValueString(), state.Description.ValueString())
 	tflog.Info(ctx, foo)
 
-	dataSystemList, err := r.client.DataSystemGet()
+	dataSystemList, err := r.client.Get()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading NEOS data system",
@@ -317,7 +317,7 @@ func (r *dataSystemResource) Update(ctx context.Context, req resource.UpdateRequ
 		Links:      links,
 	}
 
-	result, err := r.client.DataSystemPut(ctx, plan.ID.ValueString(), item)
+	result, err := r.client.Put(ctx, plan.ID.ValueString(), item)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating data system",
@@ -327,7 +327,7 @@ func (r *dataSystemResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 	//tflog.Info(ctx, fmt.Sprintf("££ Create Post result [%s] [%s] [%s] [%s] [%s] [%s]", result.Identifier, result.Name, result.Urn, result.Description, result.Label, result.CreatedAt.String()))
 
-	infoResult, err := r.client.DataSystemPutInfo(ctx, plan.ID.ValueString(), eItem)
+	infoResult, err := r.client.PutInfo(ctx, plan.ID.ValueString(), eItem)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating data system",
@@ -374,7 +374,7 @@ func (r *dataSystemResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	err := r.client.DataSystemDelete(ctx, plan.ID.ValueString())
+	err := r.client.Delete(ctx, plan.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error deleting data system",
@@ -390,7 +390,7 @@ func (r *dataSystemResource) Configure(_ context.Context, req resource.Configure
 		return
 	}
 
-	client, ok := req.ProviderData.(*neos.NeosClient)
+	client, ok := req.ProviderData.(*neos.DataSystemClient)
 
 	if !ok {
 		resp.Diagnostics.AddError(

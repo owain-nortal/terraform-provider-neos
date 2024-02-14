@@ -20,7 +20,7 @@ var (
 )
 
 type dataSourceDataSourceV2 struct {
-	client *neos.NeosClient
+	client *neos.DataSourceClient
 }
 
 func (d *dataSourceDataSourceV2) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -33,7 +33,7 @@ func (d *dataSourceDataSourceV2) Read(ctx context.Context, req datasource.ReadRe
 
 	var state DataSourceDataSourceModelV2
 
-	list, err := d.client.DataSourceGet()
+	list, err := d.client.Get()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read Data System List",
@@ -42,9 +42,9 @@ func (d *dataSourceDataSourceV2) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	tflog.Info(ctx, "Abi READ Post error ")
+	tflog.Info(ctx, "READ Post error ")
 
-	tflog.Info(ctx, fmt.Sprintf("Abi READ length %d", len(list.Entities)))
+	tflog.Info(ctx, fmt.Sprintf("READ length %d", len(list.Entities)))
 
 	// Map response body to model
 	for _, ds := range list.Entities {
@@ -71,13 +71,13 @@ func (d *dataSourceDataSourceV2) Read(ctx context.Context, req datasource.ReadRe
 
 // Configure adds the provider configured client to the data source.
 func (d *dataSourceDataSourceV2) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	tflog.Info(ctx, "Gwen Freddie Data source configure")
+	tflog.Info(ctx, "Data source configure")
 
 	if req.ProviderData == nil {
 		return
 	}
 
-	client, ok := req.ProviderData.(*neos.NeosClient)
+	client, ok := req.ProviderData.(*neos.DataSourceClient)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",

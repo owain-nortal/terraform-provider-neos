@@ -20,7 +20,7 @@ var (
 )
 
 type dataProductDataSource struct {
-	client *neos.NeosClient
+	client *neos.DataProductClient	
 }
 
 func (d *dataProductDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -34,7 +34,7 @@ func (d *dataProductDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 	var state DataProductDataSourceModelV2
 
-	list, err := d.client.DataProductGet()
+	list, err := d.client.Get()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read Data Product List",
@@ -72,13 +72,13 @@ func (d *dataProductDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 // Configure adds the provider configured client to the data source.
 func (d *dataProductDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	tflog.Info(ctx, "Gwen Freddie Data source configure")
+	tflog.Info(ctx, "Data source configure")
 
 	if req.ProviderData == nil {
 		return
 	}
 
-	client, ok := req.ProviderData.(*neos.NeosClient)
+	client, ok := req.ProviderData.(*neos.DataProductClient)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",

@@ -22,7 +22,7 @@ var (
 )
 
 type linksDataSourceV2 struct {
-	client *neos.NeosClient
+	client *neos.LinksClient
 }
 
 func (d *linksDataSourceV2) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -35,7 +35,7 @@ func (d *linksDataSourceV2) Read(ctx context.Context, req datasource.ReadRequest
 
 	var state LinksDataSourceModelV2
 
-	list, err := d.client.LinksGet()
+	list, err := d.client.Get()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read Data System List",
@@ -108,7 +108,7 @@ func (d *linksDataSourceV2) Configure(ctx context.Context, req datasource.Config
 		return
 	}
 
-	client, ok := req.ProviderData.(*neos.NeosClient)
+	client, ok := req.ProviderData.(*neos.LinksClient)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
