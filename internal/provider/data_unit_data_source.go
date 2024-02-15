@@ -89,10 +89,7 @@ func (d *dataUnitDataSourceV2) Configure(ctx context.Context, req datasource.Con
 
 	client, ok := req.ProviderData.(*neos.DataUnitClient)
 	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *neos.DataUnitClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
+		resp.Diagnostics.AddError("Unexpected Data Source Configure Type", fmt.Sprintf("Expected *neos.DataUnitClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 
 		return
 	}

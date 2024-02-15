@@ -204,14 +204,14 @@ func (r *linkDataSystemDataSourceResource) Configure(_ context.Context, req reso
 		return
 	}
 
-	client, ok := req.ProviderData.(*neos.LinksClient)
+	client, ok := req.ProviderData.(*neos.NeosClient)
 
 	if !ok {
-		resp.Diagnostics.AddError("Unexpected Data Source Configure Type", fmt.Sprintf("Expected *neos.LinkDataSystemDataSourceClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
+		resp.Diagnostics.AddError("Unexpected Data Source Configure Type", fmt.Sprintf("Expected *neos.LinksClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 		return
 	}
 
-	r.client = client
+	r.client = &client.LinksClient
 }
 
 func (r *linkDataSystemDataSourceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

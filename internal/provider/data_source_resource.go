@@ -27,7 +27,9 @@ func NewDataSourceResource() resource.Resource {
 
 // dataSourceResource is the resource implementation.
 type dataSourceResource struct {
-	client *neos.DataSourceClient
+	client           *neos.DataSourceClient
+	connectionClient *neos.DataSourceConnectionClient
+	secretClient     *neos.DataSourceSecretClient
 }
 
 var (
@@ -96,6 +98,18 @@ func (r *dataSourceResource) Schema(_ context.Context, _ resource.SchemaRequest,
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"connection_json": schema.StringAttribute{
+				Computed:    false,
+				Optional:    false,
+				Required:    true,
+				Description: "connection json",
+			},
+			"secret_json": schema.StringAttribute{
+				Computed:    false,
+				Optional:    false,
+				Required:    true,
+				Description: "secret json",
+			},
 			"contact_ids": schema.ListAttribute{
 				ElementType: types.StringType,
 				Computed:    false,
@@ -119,16 +133,18 @@ func (r *dataSourceResource) Schema(_ context.Context, _ resource.SchemaRequest,
 
 // dataSourceResourceModel maps the resource schema data.
 type dataSourceResourceModel struct {
-	ID          types.String `tfsdk:"id"`
-	URN         types.String `tfsdk:"urn"`
-	Name        types.String `tfsdk:"name"`
-	Label       types.String `tfsdk:"label"`
-	Description types.String `tfsdk:"description"`
-	Owner       types.String `tfsdk:"owner"`
-	CreatedAt   types.String `tfsdk:"created_at"`
-	Links       types.List   `tfsdk:"links"`
-	ContactIds  types.List   `tfsdk:"contact_ids"`
-	LastUpdated types.String `tfsdk:"last_updated"`
+	ID             types.String `tfsdk:"id"`
+	URN            types.String `tfsdk:"urn"`
+	Name           types.String `tfsdk:"name"`
+	Label          types.String `tfsdk:"label"`
+	Description    types.String `tfsdk:"description"`
+	Owner          types.String `tfsdk:"owner"`
+	CreatedAt      types.String `tfsdk:"created_at"`
+	ConnectionJson types.String `tfsdk:"connection_json"`
+	SecretJson     types.String `tfsdk:"secret_json"`
+	Links          types.List   `tfsdk:"links"`
+	ContactIds     types.List   `tfsdk:"contact_ids"`
+	LastUpdated    types.String `tfsdk:"last_updated"`
 }
 
 // Create a new resource.
@@ -181,10 +197,7 @@ func (r *dataSourceResource) Create(ctx context.Context, req resource.CreateRequ
 
 	result, err := r.client.Post(ctx, item)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating   data system",
-			"Could not create   data system, unexpected error: "+err.Error(),
-		)
+		resp.Diagnostics.AddError("Error creating data source", "Could not create   data source, unexpected error: "+err.Error())
 		return
 	}
 
@@ -203,7 +216,22 @@ func (r *dataSourceResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	//	tflog.Info(ctx, fmt.Sprintf("ID [%s] Desc[%s]", plan.ID, plan.Description))
+	
+	connectionResult, err := r.connectionClient.Put(ctx, result.Identifier, plan.ConnectionJson.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Error creating data source connection", "Could not create data source connection, unexpected error: "+err.Error())
+		return
+	}
+
+	tflog.Info(ctx, fmt.Sprintf("Connection result %s %s", result.Identifier, connectionResult))
+
+	secretResult, err := r.secretClient.Put(ctx, result.Identifier, plan.SecretJson.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Error creating data source secret", "Could not create data source secret, unexpected error: "+err.Error())
+		return
+	}
+
+	tflog.Info(ctx, fmt.Sprintf("Connection result %s %s", result.Identifier, secretResult))
 
 }
 
@@ -249,6 +277,12 @@ func (r *dataSourceResource) Read(ctx context.Context, req resource.ReadRequest,
 		}
 	}
 
+	connection, err := r.connectionClient.Get(state.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Error Reading NEOS data source connection", "Could not read NEOS  data source connection ID: "+state.ID.ValueString()+": "+err.Error())
+		return
+	}
+	state.ConnectionJson = types.StringValue(connection)
 	//	tsv, _ := state.ID.ToStringValue(ctx)
 	// Set refreshed state
 	//	tflog.Info(ctx, "££ READ iterate over list")
@@ -258,7 +292,7 @@ func (r *dataSourceResource) Read(ctx context.Context, req resource.ReadRequest,
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
-		tflog.Info(ctx, "Data system Read Has error")
+		tflog.Info(ctx, "Data source Read Has error")
 		return
 	}
 
@@ -336,6 +370,22 @@ func (r *dataSourceResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
+	connectionResult, err := r.connectionClient.Put(ctx, result.Identifier, plan.ConnectionJson.String())
+	if err != nil {
+		resp.Diagnostics.AddError("Error creating data source connection", "Could not create data source connection, unexpected error: "+err.Error())
+		return
+	}
+
+	tflog.Info(ctx, fmt.Sprintf("Connection result %s %s", result.Identifier, connectionResult))
+
+	secretResult, err := r.secretClient.Put(ctx, result.Identifier, plan.SecretJson.String())
+	if err != nil {
+		resp.Diagnostics.AddError("Error creating data source secret", "Could not create data source secret, unexpected error: "+err.Error())
+		return
+	}
+
+	tflog.Info(ctx, fmt.Sprintf("Connection result %s %s", result.Identifier, secretResult))
+
 	contactsList, _ := types.ListValueFrom(ctx, types.StringType, infoResult.ContactIds)
 	linksList, _ := types.ListValueFrom(ctx, types.StringType, infoResult.Links)
 
@@ -349,6 +399,7 @@ func (r *dataSourceResource) Update(ctx context.Context, req resource.UpdateRequ
 	plan.ContactIds = contactsList
 	plan.Links = linksList
 	plan.Owner = types.StringValue(infoResult.Owner)
+	plan.ConnectionJson = types.StringValue(connectionResult)
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -390,18 +441,17 @@ func (r *dataSourceResource) Configure(_ context.Context, req resource.Configure
 		return
 	}
 
-	client, ok := req.ProviderData.(*neos.DataSourceClient)
+	client, ok := req.ProviderData.(*neos.NeosClient)
 
 	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *neos.DataSourceClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
-
+		resp.Diagnostics.AddError("Unexpected Data Source Configure Type", fmt.Sprintf("Expected *neos.DataSourceClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 		return
 	}
 
-	r.client = client
+	r.client = &client.DataSourceClient
+	r.connectionClient = &client.DataSourceConnectionClient
+	r.secretClient = &client.DataSourceSecretClient
+
 }
 
 func (r *dataSourceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

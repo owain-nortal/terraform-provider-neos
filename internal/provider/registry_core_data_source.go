@@ -44,10 +44,6 @@ func (d *registryCoreDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	// tflog.Info(ctx, "Abi READ Post error ")
-
-	// tflog.Info(ctx, fmt.Sprintf("Abi READ length %d", len(list.Entities)))
-
 	// Map response body to model
 	for _, ds := range list.Cores {
 		registryCoreState := RegistryCoreModel{
@@ -110,12 +106,6 @@ func (d *registryCoreDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 						"id": schema.StringAttribute{
 							Computed: true,
 						},
-						// "access_key_id": schema.StringAttribute{
-						// 	Computed: true,
-						// },
-						// "secret_key": schema.StringAttribute{
-						// 	Computed: true,
-						// },
 					},
 				},
 			},

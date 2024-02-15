@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/owain-nortal/neos-client-go"
-	//"time"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -92,16 +91,19 @@ func (r *registryCoreResource) Schema(_ context.Context, _ resource.SchemaReques
 				Required:    true,
 				Optional:    false,
 				Description: "Name of the core",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"partition": schema.StringAttribute{
 				Computed:    false,
 				Required:    true,
 				Optional:    false,
 				Description: "The name of the partition",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
-			// "last_updated": schema.StringAttribute{
-			// 	Computed: true,
-			// },
 		},
 	}
 }
@@ -115,12 +117,11 @@ type registryCoreResourceModel struct {
 	Name        types.String `tfsdk:"name"`
 	Host        types.String `tfsdk:"host"`
 	Partition   types.String `tfsdk:"partition"`
-	//LastUpdated types.String `tfsdk:"last_updated"`
 }
 
 // Create a new resource.
 func (r *registryCoreResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	//tflog.Info(ctx, "££ Create Get plan")
+	tflog.Info(ctx, "registryCoreResource Create")
 	// Retrieve values from plan
 	var plan registryCoreResourceModel
 	diags := req.Plan.Get(ctx, &plan)
@@ -129,31 +130,22 @@ func (r *registryCoreResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	//tflog.Info(ctx, "££ After Create Get plan")
-
 	item := neos.RegistryCorePostRequest{
 		Name:      plan.Name.String(),
 		Partition: plan.Partition.String(),
 	}
 
-	//	tflog.Info(ctx, fmt.Sprintf("££ Create Post request [%s] [%s] [%s] [%s]", plan.ID, plan.Name, plan.Label, plan.Description))
-
 	result, err := r.client.Post(ctx, item)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating registry entry for core",
-			"Could not create registry entry, unexpected error: "+err.Error(),
-		)
+		resp.Diagnostics.AddError("Error creating registry entry for core", "Could not create registry entry, unexpected error: "+err.Error())
 		return
 	}
-
-	//	tflog.Info(ctx, fmt.Sprintf("££ Create Post result [%s] [%s] [%s] [%s] [%s] [%s]", result.Identifier, result.Name, result.Urn, result.Description, result.Label, result.CreatedAt.String()))
 
 	plan.Identifier = types.StringValue(result.Identifier)
 	plan.AccessKeyId = types.StringValue(result.KeyPair.AccessKeyID)
 	plan.SecretKey = types.StringValue(result.KeyPair.SecretAccessKey)
 	plan.URN = types.StringValue(result.Urn)
-	//plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
+
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -176,9 +168,7 @@ func (r *registryCoreResource) Read(ctx context.Context, req resource.ReadReques
 	dataSystemList, err := r.client.Get()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading NEOS cores from registry",
-			"Could not read NEOS  data system ID "+": "+err.Error(),
-		)
+			"Error Reading NEOS cores from registry", "Could not read NEOS  data system ID "+": "+err.Error())
 		return
 	}
 
@@ -202,70 +192,13 @@ func (r *registryCoreResource) Read(ctx context.Context, req resource.ReadReques
 
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *registryCoreResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+
 	var plan registryCoreResourceModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	// Can't do update
-
-	//tflog.Info(ctx, "££££ update After the ranges")
-
-	// item := neos.RegistryCorePutRequest{
-	// 	Entity: neos.RegistryCorePutRequestEntity{
-	// 		Name:        plan.Name.String(),
-	// 		Label:       plan.Label.String(),
-	// 		Description: plan.Description.String(),
-	// 	},
-	// }
-
-	// eItem := neos.RegistryCorePutRequestEntityInfo{
-	// 	Owner:      plan.Owner.String(),
-	// 	ContactIds: contacts,
-	// 	Links:      links,
-	// }
-
-	// result, err := r.client.RegistryCorePut(ctx, plan.ID.ValueString(), item)
-	// if err != nil {
-	// 	resp.Diagnostics.AddError(
-	// 		"Error updating data system",
-	// 		"Could not put data system, unexpected error: "+err.Error(),
-	// 	)
-	// 	return
-	// }
-	// //tflog.Info(ctx, fmt.Sprintf("££ Create Post result [%s] [%s] [%s] [%s] [%s] [%s]", result.Identifier, result.Name, result.Urn, result.Description, result.Label, result.CreatedAt.String()))
-
-	// infoResult, err := r.client.RegistryCorePutInfo(ctx, plan.ID.ValueString(), eItem)
-	// if err != nil {
-	// 	resp.Diagnostics.AddError(
-	// 		"Error updating data system",
-	// 		"Could not put data system, unexpected error: "+err.Error(),
-	// 	)
-	// 	return
-	// }
-
-	// contactsList, _ := types.ListValueFrom(ctx, types.StringType, infoResult.ContactIds)
-	// linksList, _ := types.ListValueFrom(ctx, types.StringType, infoResult.Links)
-
-	// plan.ID = types.StringValue(result.Identifier)
-	// plan.Name = types.StringValue(result.Name)
-	// plan.URN = types.StringValue(result.Urn)
-	// plan.Description = types.StringValue(result.Description)
-	// plan.Label = types.StringValue(result.Label)
-	// plan.CreatedAt = types.StringValue(result.CreatedAt.String())
-	// plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
-	// plan.ContactIds = contactsList
-	// plan.Links = linksList
-	// plan.Owner = types.StringValue(infoResult.Owner)
-	diags = resp.State.Set(ctx, plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	//plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -286,17 +219,11 @@ func (r *registryCoreResource) Delete(ctx context.Context, req resource.DeleteRe
 		return
 	}
 
-	// rcdr := neos.RegistryCoreDeleteRequest{
-	// 	Id: ,
-	// }
 	tflog.Info(ctx, fmt.Sprintf("registryCoreResource delete id %s", plan.Identifier.ValueString()))
 
 	err := r.client.Delete(ctx, plan.Identifier.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error deleting core from registry",
-			"Could not delete core from registry, unexpected error: "+err.Error(),
-		)
+		resp.Diagnostics.AddError("Error deleting core from registry", "Could not delete core from registry, unexpected error: "+err.Error())
 		return
 	}
 
@@ -310,11 +237,7 @@ func (r *registryCoreResource) Configure(_ context.Context, req resource.Configu
 	client, ok := req.ProviderData.(*neos.NeosClient)
 
 	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *neos.RegistryCoreClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
-
+		resp.Diagnostics.AddError("Unexpected Data Source Configure Type", fmt.Sprintf("Expected *neos.RegistryCoreClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 		return
 	}
 

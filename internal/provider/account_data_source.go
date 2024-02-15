@@ -10,43 +10,36 @@ import (
 	"github.com/owain-nortal/neos-client-go"
 )
 
-func NewDataSourceDataSource() datasource.DataSource {
-	return &dataSourceDataSourceV2{}
+func NewAccountDataSource() datasource.DataSource {
+	return &accountDataSource{}
 }
 
 var (
-	_ datasource.DataSource              = &dataSourceDataSourceV2{}
-	_ datasource.DataSourceWithConfigure = &dataSourceDataSourceV2{}
+	_ datasource.DataSource              = &accountDataSource{}
+	_ datasource.DataSourceWithConfigure = &accountDataSource{}
 )
 
-type dataSourceDataSourceV2 struct {
+type accountDataSource struct {
 	client *neos.DataSourceClient
 }
 
-func (d *dataSourceDataSourceV2) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *accountDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_data_source"
 }
 
-func (d *dataSourceDataSourceV2) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *accountDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 
-	tflog.Info(ctx, "Abi READ")
+	tflog.Info(ctx, "accountDataSource READ")
 
-	var state DataSourceDataSourceModelV2
+	var state AccountDataSourceModel
 
 	list, err := d.client.Get()
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Read Data System List",
-			err.Error(),
-		)
+		resp.Diagnostics.AddError("Unable to Read Data System List", err.Error())
 		return
 	}
 
-	tflog.Info(ctx, "READ Post error ")
-
-	tflog.Info(ctx, fmt.Sprintf("READ length %d", len(list.Entities)))
-
-	// Map response body to model
+	 // Map response body to model
 	for _, ds := range list.Entities {
 		dataSourceState := DataSourceModelV2{
 			Identifier:  types.StringValue(ds.Identifier),
@@ -70,7 +63,7 @@ func (d *dataSourceDataSourceV2) Read(ctx context.Context, req datasource.ReadRe
 }
 
 // Configure adds the provider configured client to the data source.
-func (d *dataSourceDataSourceV2) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *accountDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	tflog.Info(ctx, "Data source configure")
 
 	if req.ProviderData == nil {
@@ -90,7 +83,7 @@ func (d *dataSourceDataSourceV2) Configure(ctx context.Context, req datasource.C
 	d.client = client
 }
 
-func (d *dataSourceDataSourceV2) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *accountDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"datasystems": schema.ListNestedAttribute{
@@ -118,9 +111,6 @@ func (d *dataSourceDataSourceV2) Schema(_ context.Context, _ datasource.SchemaRe
 						"owner": schema.StringAttribute{
 							Computed: true,
 						},
-						"connection_json": schema.StringAttribute{
-							Computed: true,
-						},
 						"state": schema.SingleNestedAttribute{
 							Computed: true,
 							Attributes: map[string]schema.Attribute{
@@ -139,12 +129,12 @@ func (d *dataSourceDataSourceV2) Schema(_ context.Context, _ datasource.SchemaRe
 	}
 }
 
-type DataSourceDataSourceModelV2 struct {
+type AccountDataSourceModel struct {
 	DataSources []DataSourceModelV2 `tfsdk:"datasource"`
 }
 
 // coffeesModel maps coffees schema data.
-type DataSourceModelV2 struct {
+type AccountModel struct {
 	Identifier  types.String           `tfsdk:"id"`
 	Urn         types.String           `tfsdk:"urn"`
 	Name        types.String           `tfsdk:"name"`
@@ -155,7 +145,7 @@ type DataSourceModelV2 struct {
 	State       DataSourceStateModelV2 `tfsdk:"state"`
 }
 
-type DataSourceStateModelV2 struct {
+type AccountStateModel struct {
 	State   types.String `tfsdk:"state"`
 	Healthy types.Bool   `tfsdk:"healthy"`
 }

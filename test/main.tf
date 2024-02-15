@@ -8,7 +8,7 @@ terraform {
 
 provider "neos" {
   username  = "neosadmin"
-  password  = ""
+  password  = "**Gwen11"
   hub_host  = "owain10.neosdata.cloud"
   core_host = "owain10.neosdata.cloud"
   account   = "root"
@@ -30,7 +30,7 @@ provider "neos" {
 
 resource "neos_registry_core" "testcore1" {
   partition = "ksa"
-  name      = "testcore-5a"
+  name      = "testcore-6a"
 }
 
 output "access_key_id" {
@@ -56,25 +56,24 @@ output "urn" {
 #   value = data.neos_data_system.edu
 # }
 
-# variable "links" {
+variable "links" {
+  type    = list(any)
+  default = ["link1", "link2"]
+}
 
-#   type    = list(any)
-#   default = ["link1", "link2"]
-# }
+variable "contact_ids" {
+  type    = list(any)
+  default = ["contacts1", "contacts2"]
+}
 
-# variable "contact_ids" {
-#   type    = list(any)
-#   default = ["contacts1", "contacts2"]
-# }
-
-# resource "neos_data_system" "op-test1" {
-#   name        = "APTestDataSystem"
-#   description = "desc test data system 2"
-#   owner       = "test data system 2 owner"
-#   label       = "AP2"
-#   links       = var.links
-#   contact_ids = var.contact_ids
-# }
+resource "neos_data_system" "op-test1" {
+  name        = "APTestDataSystem"
+  description = "desc test data system 2"
+  owner       = "test data system 2 owner"
+  label       = "AP2"
+  links       = var.links
+  contact_ids = var.contact_ids
+}
 
 # resource "neos_data_system" "op-test2" {
 #   name        = "APTestDataSystem3"

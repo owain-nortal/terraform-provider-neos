@@ -133,7 +133,7 @@ type dataSystemResourceModel struct {
 
 // Create a new resource.
 func (r *dataSystemResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	//tflog.Info(ctx, "££ Create Get plan")
+	//tflog.Info(ctx, "dataSystemResource Create ")
 	// Retrieve values from plan
 	var plan dataSystemResourceModel
 	diags := req.Plan.Get(ctx, &plan)
@@ -141,8 +141,6 @@ func (r *dataSystemResource) Create(ctx context.Context, req resource.CreateRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	//tflog.Info(ctx, "££ After Create Get plan")
 
 	linkList, diag := plan.Links.ToListValue(ctx)
 	resp.Diagnostics.Append(diag...)
@@ -177,18 +175,11 @@ func (r *dataSystemResource) Create(ctx context.Context, req resource.CreateRequ
 		},
 	}
 
-	//	tflog.Info(ctx, fmt.Sprintf("££ Create Post request [%s] [%s] [%s] [%s]", plan.ID, plan.Name, plan.Label, plan.Description))
-
 	result, err := r.client.Post(ctx, item)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating   data system",
-			"Could not create   data system, unexpected error: "+err.Error(),
-		)
+		resp.Diagnostics.AddError("Error creating   data system", "Could not create   data system, unexpected error: "+err.Error())
 		return
 	}
-
-	//	tflog.Info(ctx, fmt.Sprintf("££ Create Post result [%s] [%s] [%s] [%s] [%s] [%s]", result.Identifier, result.Name, result.Urn, result.Description, result.Label, result.CreatedAt.String()))
 
 	plan.ID = types.StringValue(result.Identifier)
 	plan.Name = types.StringValue(result.Name)
@@ -203,16 +194,12 @@ func (r *dataSystemResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	//	tflog.Info(ctx, fmt.Sprintf("ID [%s] Desc[%s]", plan.ID, plan.Description))
-
 }
 
 // Read refreshes the Terraform state with the latest data.
 // Read resource information.
 func (r *dataSystemResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	// Get current state
-
-	//	tflog.Info(ctx, "££ READ Get current state")
 
 	var state dataSystemResourceModel
 	diags := req.State.Get(ctx, &state)
@@ -226,18 +213,13 @@ func (r *dataSystemResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	dataSystemList, err := r.client.Get()
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Reading NEOS data system",
-			"Could not read NEOS  data system ID "+state.ID.ValueString()+": "+err.Error(),
-		)
+		resp.Diagnostics.AddError("Error Reading NEOS data system", "Could not read NEOS  data system ID "+state.ID.ValueString()+": "+err.Error())
 		return
 	}
 
 	tflog.Info(ctx, fmt.Sprintf("££ READ iterate over list looking for: %s", state.ID.ValueString()))
 	for _, ds := range dataSystemList.Entities {
-		//		tflog.Info(ctx, fmt.Sprintf("££ READ ITEM: [%s] [%s] %v", ds.Identifier, state.ID.ValueString(), (ds.Identifier == state.ID.ValueString())))
 		if ds.Identifier == state.ID.ValueString() {
-			//			tflog.Info(ctx, fmt.Sprintf("££ READ got one in list [%s]", ds.Identifier))
 			state.ID = types.StringValue(ds.Identifier)
 			state.Name = types.StringValue(ds.Name)
 			state.Label = types.StringValue(ds.Label)
@@ -248,12 +230,6 @@ func (r *dataSystemResource) Read(ctx context.Context, req resource.ReadRequest,
 			break
 		}
 	}
-
-	//	tsv, _ := state.ID.ToStringValue(ctx)
-	// Set refreshed state
-	//	tflog.Info(ctx, "££ READ iterate over list")
-	//	tflog.Info(ctx, tsv.String())
-	//	tflog.Info(ctx, state.ID.ValueString())
 
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -272,13 +248,6 @@ func (r *dataSystemResource) Update(ctx context.Context, req resource.UpdateRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	//tflog.Info(ctx, "££ Update After Create Get plan")
-	// i, e := plan.ID.ToStringValue(ctx)
-	// if e.HasError() {
-	// 	tflog.Info(ctx, "Data system update plan get has error")
-	// 	return
-	// }
 
 	linkList, diag := plan.Links.ToListValue(ctx)
 	resp.Diagnostics.Append(diag...)
@@ -301,8 +270,6 @@ func (r *dataSystemResource) Update(ctx context.Context, req resource.UpdateRequ
 		contacts = append(contacts, v.String())
 	}
 
-	//tflog.Info(ctx, "££££ update After the ranges")
-
 	item := neos.DataSystemPutRequest{
 		Entity: neos.DataSystemPutRequestEntity{
 			Name:        plan.Name.String(),
@@ -319,20 +286,13 @@ func (r *dataSystemResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	result, err := r.client.Put(ctx, plan.ID.ValueString(), item)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error updating data system",
-			"Could not put data system, unexpected error: "+err.Error(),
-		)
+		resp.Diagnostics.AddError("Error updating data system", "Could not put data system, unexpected error: "+err.Error())
 		return
 	}
-	//tflog.Info(ctx, fmt.Sprintf("££ Create Post result [%s] [%s] [%s] [%s] [%s] [%s]", result.Identifier, result.Name, result.Urn, result.Description, result.Label, result.CreatedAt.String()))
 
 	infoResult, err := r.client.PutInfo(ctx, plan.ID.ValueString(), eItem)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error updating data system",
-			"Could not put data system, unexpected error: "+err.Error(),
-		)
+		resp.Diagnostics.AddError("Error updating data system", "Could not put data system, unexpected error: "+err.Error())
 		return
 	}
 
@@ -376,10 +336,7 @@ func (r *dataSystemResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 	err := r.client.Delete(ctx, plan.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error deleting data system",
-			"Could not delete data system, unexpected error: "+err.Error(),
-		)
+		resp.Diagnostics.AddError("Error deleting data system", "Could not delete data system, unexpected error: "+err.Error())
 		return
 	}
 
@@ -390,18 +347,15 @@ func (r *dataSystemResource) Configure(_ context.Context, req resource.Configure
 		return
 	}
 
-	client, ok := req.ProviderData.(*neos.DataSystemClient)
+	client, ok := req.ProviderData.(*neos.NeosClient)
 
 	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *neos.DataSystemClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
-
+		resp.Diagnostics.AddError("Unexpected Data Source Configure Type", fmt.Sprintf("Expected *neos.DataSystemClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 		return
 	}
 
-	r.client = client
+	r.client = &client.DataSystemClient
+
 }
 
 func (r *dataSystemResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

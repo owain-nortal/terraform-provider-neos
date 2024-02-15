@@ -30,7 +30,7 @@ func NewDataProductResource() resource.Resource {
 
 // dataProductResource is the resource implementation.
 type dataProductResource struct {
-	client *neos.DataProductClient
+	client       *neos.DataProductClient
 	schemaClient *neos.DataProductSchemaClient
 }
 
@@ -702,10 +702,7 @@ func (r *dataProductResource) Delete(ctx context.Context, req resource.DeleteReq
 
 	err := r.client.Delete(ctx, id)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error deleting data product",
-			"Could not delete data product, unexpected error: "+err.Error(),
-		)
+		resp.Diagnostics.AddError("Error deleting data product", "Could not delete data product, unexpected error: "+err.Error())
 		return
 	}
 
@@ -716,31 +713,23 @@ func (r *dataProductResource) Configure(_ context.Context, req resource.Configur
 		return
 	}
 
-	client, ok := req.ProviderData.(*neos.DataProductClient)
+	client, ok := req.ProviderData.(*neos.NeosClient)
 
 	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *neos.DataProductClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
-
+		resp.Diagnostics.AddError("Unexpected Data Source Configure Type", fmt.Sprintf("Expected *neos.DataProductClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 		return
 	}
 
-	r.client = client
+	r.client = &client.DataProductClient
 
-	schemaClient, ok := req.ProviderData.(*neos.DataProductSchemaClient)
+	// schemaClient, ok := req.ProviderData.(*neos.DataProductSchemaClient)
 
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *neos.DataProductClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
+	// if !ok {
+	// 	resp.Diagnostics.AddError("Unexpected Data Source Configure Type", fmt.Sprintf("Expected *neos.DataProductClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
+	// 	return
+	// }
 
-		return
-	}
-
-	r.schemaClient = schemaClient
+	r.schemaClient = &client.DataProductSchemaClient
 }
 
 func (r *dataProductResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

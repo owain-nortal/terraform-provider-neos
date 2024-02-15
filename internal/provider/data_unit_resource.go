@@ -391,6 +391,28 @@ func (r *dataUnitResource) Create(ctx context.Context, req resource.CreateReques
 	// 	resp.Diagnostics.AddError("Error ordering data unit config ", "unexpected error: "+err.Error())
 	// 	return
 	// }
+
+
+	
+
+	_, err = r.client.ConfigPut(ctx, result.Identifier, configJson)
+	if err != nil {
+		resp.Diagnostics.AddError("Error updating data unit config ", "Could not create data unit config, unexpected error: "+err.Error())
+		return
+	}
+
+	// var res map[string]map[string]interface{}
+	// json.Unmarshal(dd, &res)
+
+	plan.ConfigJson = types.StringValue(configJson)
+	//tflog.Info(ctx, fmt.Sprintf("%s", dd.Configuration))
+
+
+	// ordered, err := r.JSONRemarshal([]byte(configJson))
+	// if err != nil {
+	// 	resp.Diagnostics.AddError("Error ordering data unit config ", "unexpected error: "+err.Error())
+	// 	return
+	// }
 	// dd, err := r.client.ConfigPutBase(ctx, id, ordered)
 	// if err != nil {
 	// 	resp.Diagnostics.AddError("Error creating data unit config ", "Could not create data unit config, unexpected error: "+err.Error())
@@ -531,10 +553,7 @@ func (r *dataUnitResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	dataUnitList, err := r.client.Get()
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Reading NEOS data unit",
-			"Could not read NEOS  data unit ID "+state.ID.ValueString()+": "+err.Error(),
-		)
+		resp.Diagnostics.AddError("Error Reading NEOS data unit", "Could not read NEOS  data unit ID "+state.ID.ValueString()+": "+err.Error())
 		return
 	}
 
@@ -645,20 +664,14 @@ func (r *dataUnitResource) Update(ctx context.Context, req resource.UpdateReques
 
 	result, err := r.client.Put(ctx, plan.ID.ValueString(), item)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error updating data unit",
-			"Could not put data unit, unexpected error: "+err.Error(),
-		)
+		resp.Diagnostics.AddError("Error updating data unit", "Could not put data unit, unexpected error: "+err.Error())
 		return
 	}
 	//tflog.Info(ctx, fmt.Sprintf("££ Create Post result [%s] [%s] [%s] [%s] [%s] [%s]", result.Identifier, result.Name, result.Urn, result.Description, result.Label, result.CreatedAt.String()))
 
 	infoResult, err := r.client.PutInfo(ctx, plan.ID.ValueString(), eItem)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error updating data unit",
-			"Could not put data unit, unexpected error: "+err.Error(),
-		)
+		resp.Diagnostics.AddError("Error updating data unit", "Could not put data unit, unexpected error: "+err.Error())
 		return
 	}
 
@@ -685,17 +698,17 @@ func (r *dataUnitResource) Update(ctx context.Context, req resource.UpdateReques
 	// 	return
 	// }
 
-	// dd, err := r.client.ConfigTablePut()Put(ctx, result.Identifier, []byte(ordered))
-	// if err != nil {
-	// 	resp.Diagnostics.AddError("Error updating data unit config ", "Could not update data unit config, unexpected error: "+err.Error())
-	// 	return
-	// }
+	_, err = r.client.ConfigPut(ctx, result.Identifier, configJson)
+	if err != nil {
+		resp.Diagnostics.AddError("Error updating data unit config ", "Could not update data unit config, unexpected error: "+err.Error())
+		return
+	}
 
 	// var res map[string]map[string]interface{}
 	// json.Unmarshal(dd, &res)
 
-	// plan.ConfigJson = types.StringValue(configJson)
-	//tflog.Info(ctx, fmt.Sprintf("%s", res["configuration"]["data_unit_type"]))
+	plan.ConfigJson = types.StringValue(configJson)
+	//tflog.Info(ctx, fmt.Sprintf("%s", dd.Configuration))
 
 	// plan.Config.Table = &dataUnitConfigTableModel{
 	// 	Table: types.StringValue("upd"),
@@ -722,10 +735,7 @@ func (r *dataUnitResource) Delete(ctx context.Context, req resource.DeleteReques
 
 	err := r.client.Delete(ctx, plan.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error deleting data unit",
-			"Could not delete data unit, unexpected error: "+err.Error(),
-		)
+		resp.Diagnostics.AddError("Error deleting data unit", "Could not delete data unit, unexpected error: "+err.Error())
 		return
 	}
 
@@ -736,18 +746,15 @@ func (r *dataUnitResource) Configure(_ context.Context, req resource.ConfigureRe
 		return
 	}
 
-	client, ok := req.ProviderData.(*neos.DataUnitClient)
+	client, ok := req.ProviderData.(*neos.NeosClient)
 
 	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *neos.DataUnitClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
-
+		resp.Diagnostics.AddError("Unexpected Data Source Configure Type", fmt.Sprintf("Expected *neos.DataUnitClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 		return
 	}
 
-	r.client = client
+	r.client = &client.DataUnitClient
+
 }
 
 func (r *dataUnitResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
