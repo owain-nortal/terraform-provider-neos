@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"encoding/json"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -27,9 +28,10 @@ func NewDataSourceResource() resource.Resource {
 
 // dataSourceResource is the resource implementation.
 type dataSourceResource struct {
-	client           *neos.DataSourceClient
-	connectionClient *neos.DataSourceConnectionClient
-	secretClient     *neos.DataSourceSecretClient
+	client                 *neos.DataSourceClient
+	connectionClient       *neos.DataSourceConnectionClient
+	dataSourceSecretClient *neos.DataSourceSecretClient
+	secretClient           *neos.SecretClient
 }
 
 var (
@@ -103,6 +105,9 @@ func (r *dataSourceResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Optional:    false,
 				Required:    true,
 				Description: "connection json",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"secret_json": schema.StringAttribute{
 				Computed:    false,
@@ -216,7 +221,6 @@ func (r *dataSourceResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	
 	connectionResult, err := r.connectionClient.Put(ctx, result.Identifier, plan.ConnectionJson.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating data source connection", "Could not create data source connection, unexpected error: "+err.Error())
@@ -225,7 +229,14 @@ func (r *dataSourceResource) Create(ctx context.Context, req resource.CreateRequ
 
 	tflog.Info(ctx, fmt.Sprintf("Connection result %s %s", result.Identifier, connectionResult))
 
-	secretResult, err := r.secretClient.Put(ctx, result.Identifier, plan.SecretJson.ValueString())
+	var secretMap map[string]string
+	secretBytes := []byte(plan.SecretJson.ValueString())
+	if err := json.Unmarshal(secretBytes, &secretMap); err != nil {
+		resp.Diagnostics.AddError("Error unmarshal connection secret", " unexpected error: "+err.Error())
+		return
+	}
+
+	secretResult, err := r.dataSourceSecretClient.Post(ctx, result.Identifier, secretMap)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating data source secret", "Could not create data source secret, unexpected error: "+err.Error())
 		return
@@ -249,23 +260,14 @@ func (r *dataSourceResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	foo := fmt.Sprintf("ID [%s]  Desc [%s]", state.ID.ValueString(), state.Description.ValueString())
-	tflog.Info(ctx, foo)
-
 	dataSourceList, err := r.client.Get()
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Reading NEOS data system",
-			"Could not read NEOS  data system ID "+state.ID.ValueString()+": "+err.Error(),
-		)
+		resp.Diagnostics.AddError("Error Reading NEOS data system", "Could not read NEOS  data system ID "+state.ID.ValueString()+": "+err.Error())
 		return
 	}
 
-	tflog.Info(ctx, fmt.Sprintf("££ READ iterate over list looking for: %s", state.ID.ValueString()))
 	for _, ds := range dataSourceList.Entities {
-		//		tflog.Info(ctx, fmt.Sprintf("££ READ ITEM: [%s] [%s] %v", ds.Identifier, state.ID.ValueString(), (ds.Identifier == state.ID.ValueString())))
 		if ds.Identifier == state.ID.ValueString() {
-			//			tflog.Info(ctx, fmt.Sprintf("££ READ got one in list [%s]", ds.Identifier))
 			state.ID = types.StringValue(ds.Identifier)
 			state.Name = types.StringValue(ds.Name)
 			state.Label = types.StringValue(ds.Label)
@@ -277,17 +279,16 @@ func (r *dataSourceResource) Read(ctx context.Context, req resource.ReadRequest,
 		}
 	}
 
-	connection, err := r.connectionClient.Get(state.ID.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError("Error Reading NEOS data source connection", "Could not read NEOS  data source connection ID: "+state.ID.ValueString()+": "+err.Error())
-		return
-	}
-	state.ConnectionJson = types.StringValue(connection)
-	//	tsv, _ := state.ID.ToStringValue(ctx)
-	// Set refreshed state
-	//	tflog.Info(ctx, "££ READ iterate over list")
-	//	tflog.Info(ctx, tsv.String())
-	//	tflog.Info(ctx, state.ID.ValueString())
+	// connection, err := r.connectionClient.Get(state.ID.ValueString())
+	// if err != nil {
+	// 	resp.Diagnostics.AddError("Error Reading NEOS data source connection", "Could not read NEOS  data source connection ID: "+state.ID.ValueString()+": "+err.Error())
+	// 	return
+	// }
+
+	connectionJson := state.ConnectionJson
+
+	//state.ConnectionJson = types.StringValue(connection)
+	state.ConnectionJson = connectionJson
 
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -370,21 +371,38 @@ func (r *dataSourceResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	connectionResult, err := r.connectionClient.Put(ctx, result.Identifier, plan.ConnectionJson.String())
+	connectionResult, err := r.connectionClient.Put(ctx, result.Identifier, plan.ConnectionJson.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating data source connection", "Could not create data source connection, unexpected error: "+err.Error())
 		return
 	}
 
+	//need to get the secret id from the connection?
+	ds, err := r.client.GetById(plan.ID.ValueString())
+
 	tflog.Info(ctx, fmt.Sprintf("Connection result %s %s", result.Identifier, connectionResult))
 
-	secretResult, err := r.secretClient.Put(ctx, result.Identifier, plan.SecretJson.String())
+	var secretMap map[string]string
+	secretBytes := []byte(plan.SecretJson.ValueString())
+	if err := json.Unmarshal(secretBytes, &secretMap); err != nil {
+		resp.Diagnostics.AddError("Error unmarshal connection secret", " unexpected error: "+err.Error())
+		return
+	}
+
+	secret, err := r.secretClient.GetById(ds.SecretIdentifier)
+
+	spr := neos.SecretPutRequest{
+		Name: secret.Name,
+		Data: secretMap,
+	}
+
+	secretResult, err := r.secretClient.Put(ctx, ds.SecretIdentifier, spr)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating data source secret", "Could not create data source secret, unexpected error: "+err.Error())
 		return
 	}
 
-	tflog.Info(ctx, fmt.Sprintf("Connection result %s %s", result.Identifier, secretResult))
+	tflog.Info(ctx, fmt.Sprintf("Secret put result %s %s", result.Identifier, secretResult.Identifier))
 
 	contactsList, _ := types.ListValueFrom(ctx, types.StringType, infoResult.ContactIds)
 	linksList, _ := types.ListValueFrom(ctx, types.StringType, infoResult.Links)
@@ -450,7 +468,8 @@ func (r *dataSourceResource) Configure(_ context.Context, req resource.Configure
 
 	r.client = &client.DataSourceClient
 	r.connectionClient = &client.DataSourceConnectionClient
-	r.secretClient = &client.DataSourceSecretClient
+	r.dataSourceSecretClient = &client.DataSourceSecretClient
+	r.secretClient = &client.SecretClient
 
 }
 

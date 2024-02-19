@@ -441,7 +441,6 @@ func (r *dataProductResource) Read(ctx context.Context, req resource.ReadRequest
 	for _, ds := range dataProductList.Entities {
 		//		tflog.Info(ctx, fmt.Sprintf("££ READ ITEM: [%s] [%s] %v", ds.Identifier, state.ID.ValueString(), (ds.Identifier == state.ID.ValueString())))
 		if ds.Identifier == state.ID.ValueString() {
-			//			tflog.Info(ctx, fmt.Sprintf("££ READ got one in list [%s]", ds.Identifier))
 			state.ID = types.StringValue(ds.Identifier)
 			state.Name = types.StringValue(ds.Name)
 			state.Label = types.StringValue(ds.Label)
@@ -452,10 +451,7 @@ func (r *dataProductResource) Read(ctx context.Context, req resource.ReadRequest
 
 			dataProductSchema, err := r.schemaClient.Get(ds.Identifier)
 			if err != nil {
-				resp.Diagnostics.AddError(
-					"Error Reading NEOS data product",
-					"Could not read NEOS schema data product ID "+state.ID.ValueString()+": "+err.Error(),
-				)
+				resp.Diagnostics.AddError("Error Reading NEOS data product", "Could not read NEOS schema data product ID "+state.ID.ValueString()+": "+err.Error())
 				return
 			}
 			dpsm, shouldReturn := convertSchemaToModel(ctx, dataProductSchema, resp)
@@ -464,6 +460,7 @@ func (r *dataProductResource) Read(ctx context.Context, req resource.ReadRequest
 			}
 
 			state.Schema = dpsm
+			state.Schema.ProductType = types.StringValue("stored")
 
 			break
 		}
