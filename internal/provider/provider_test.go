@@ -15,8 +15,10 @@ const (
 provider "neos" {
   username = "owain.perry"
   password = "password123"
-  core_host     = "localhost"
-  hub_host = "sandbox.city3os.com"
+  hub_host  = "owain10.neosdata.cloud"
+  core_host = "owain10.neosdata.cloud"
+  account   = "root"
+  partition = "ksa"
 }
 `
 )
