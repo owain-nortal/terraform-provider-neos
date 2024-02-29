@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/owain-nortal/neos-client-go"
-	"time"
 	"strings"
+	"time"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -223,8 +223,8 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	}
 
 	for _, ds := range userList.Users {
-		if ds.Identifier == state.ID.ValueString() {		
-			bits := strings.Split(ds.Urn,":")
+		if ds.Identifier == state.ID.ValueString() {
+			bits := strings.Split(ds.Urn, ":")
 			account := bits[4]
 			state.ID = types.StringValue(ds.Identifier)
 			state.FirstName = types.StringValue(ds.FirstName)

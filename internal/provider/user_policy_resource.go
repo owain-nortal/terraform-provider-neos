@@ -158,7 +158,7 @@ func (r *userPolicyResource) Read(ctx context.Context, req resource.ReadRequest,
 	//	x , diag :=  jt.NormalizedType.ValueFromString(jt.NormalizedType{},ctx,)
 
 	getPolicy := jt.NewNormalizedValue(userPolicy.Policy)
-	eq,_ := getPolicy.StringSemanticEquals(ctx,state.Policy)
+	eq, _ := getPolicy.StringSemanticEquals(ctx, state.Policy)
 	if !eq {
 		state.Policy = getPolicy
 	}

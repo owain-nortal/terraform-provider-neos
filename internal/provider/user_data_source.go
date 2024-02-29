@@ -33,7 +33,7 @@ func (d *userDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 
 	var state UserDataSourceModel
 
-	list, err := d.client.List("","","")
+	list, err := d.client.List("", "", "")
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to Read User List", err.Error())
 		return
@@ -127,14 +127,14 @@ type UserDataSourceModel struct {
 }
 
 type UserModel struct {
-	FirstName   types.String `tfsdk:"first_name"`
-	LastName    types.String `tfsdk:"last_name"`
-	Username    types.String `tfsdk:"username"`
-	Email       types.String `tfsdk:"email"`
-	URN         types.String `tfsdk:"urn"`
-	ID          types.String `tfsdk:"id"`
-	Enabled     types.Bool   `tfsdk:"enabled"`
-	IsSystem    types.Bool   `tfsdk:"is_system"`
-	Account     types.String `tfsdk:"account"`
-	//LastUpdated types.String `tfsdk:"last_updated"`	
+	FirstName types.String `tfsdk:"first_name"`
+	LastName  types.String `tfsdk:"last_name"`
+	Username  types.String `tfsdk:"username"`
+	Email     types.String `tfsdk:"email"`
+	URN       types.String `tfsdk:"urn"`
+	ID        types.String `tfsdk:"id"`
+	Enabled   types.Bool   `tfsdk:"enabled"`
+	IsSystem  types.Bool   `tfsdk:"is_system"`
+	Account   types.String `tfsdk:"account"`
+	//LastUpdated types.String `tfsdk:"last_updated"`
 }

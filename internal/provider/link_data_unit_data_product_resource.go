@@ -13,7 +13,6 @@ import (
 	"time"
 )
 
-
 func NewLinkDataUnitDataProductResource() resource.Resource {
 	return &linkDataUnitDataProductResource{}
 }
