@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"encoding/json"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -11,8 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/owain-nortal/neos-client-go"
-	"time"
+	neos "github.com/owain-nortal/neos-client-go"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -27,7 +29,10 @@ func NewDataSourceResource() resource.Resource {
 
 // dataSourceResource is the resource implementation.
 type dataSourceResource struct {
-	client *neos.NeosClient
+	client                 *neos.DataSourceClient
+	connectionClient       *neos.DataSourceConnectionClient
+	dataSourceSecretClient *neos.DataSourceSecretClient
+	secretClient           *neos.SecretClient
 }
 
 var (
@@ -96,6 +101,21 @@ func (r *dataSourceResource) Schema(_ context.Context, _ resource.SchemaRequest,
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"connection_json": schema.StringAttribute{
+				Computed:    false,
+				Optional:    false,
+				Required:    true,
+				Description: "connection json",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"secret_json": schema.StringAttribute{
+				Computed:    false,
+				Optional:    false,
+				Required:    true,
+				Description: "secret json",
+			},
 			"contact_ids": schema.ListAttribute{
 				ElementType: types.StringType,
 				Computed:    false,
@@ -119,16 +139,18 @@ func (r *dataSourceResource) Schema(_ context.Context, _ resource.SchemaRequest,
 
 // dataSourceResourceModel maps the resource schema data.
 type dataSourceResourceModel struct {
-	ID          types.String `tfsdk:"id"`
-	URN         types.String `tfsdk:"urn"`
-	Name        types.String `tfsdk:"name"`
-	Label       types.String `tfsdk:"label"`
-	Description types.String `tfsdk:"description"`
-	Owner       types.String `tfsdk:"owner"`
-	CreatedAt   types.String `tfsdk:"created_at"`
-	Links       types.List   `tfsdk:"links"`
-	ContactIds  types.List   `tfsdk:"contact_ids"`
-	LastUpdated types.String `tfsdk:"last_updated"`
+	ID             types.String `tfsdk:"id"`
+	URN            types.String `tfsdk:"urn"`
+	Name           types.String `tfsdk:"name"`
+	Label          types.String `tfsdk:"label"`
+	Description    types.String `tfsdk:"description"`
+	Owner          types.String `tfsdk:"owner"`
+	CreatedAt      types.String `tfsdk:"created_at"`
+	ConnectionJson types.String `tfsdk:"connection_json"`
+	SecretJson     types.String `tfsdk:"secret_json"`
+	Links          types.List   `tfsdk:"links"`
+	ContactIds     types.List   `tfsdk:"contact_ids"`
+	LastUpdated    types.String `tfsdk:"last_updated"`
 }
 
 // Create a new resource.
@@ -179,12 +201,9 @@ func (r *dataSourceResource) Create(ctx context.Context, req resource.CreateRequ
 
 	//	tflog.Info(ctx, fmt.Sprintf("££ Create Post request [%s] [%s] [%s] [%s]", plan.ID, plan.Name, plan.Label, plan.Description))
 
-	result, err := r.client.DataSourcePost(ctx, item)
+	result, err := r.client.Post(ctx, item)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating   data system",
-			"Could not create   data system, unexpected error: "+err.Error(),
-		)
+		resp.Diagnostics.AddError("Error creating data source", "Could not create   data source, unexpected error: "+err.Error())
 		return
 	}
 
@@ -203,7 +222,28 @@ func (r *dataSourceResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	//	tflog.Info(ctx, fmt.Sprintf("ID [%s] Desc[%s]", plan.ID, plan.Description))
+	connectionResult, err := r.connectionClient.Put(ctx, result.Identifier, plan.ConnectionJson.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Error creating data source connection", "Could not create data source connection, unexpected error: "+err.Error())
+		return
+	}
+
+	tflog.Info(ctx, fmt.Sprintf("Connection result %s %s", result.Identifier, connectionResult))
+
+	var secretMap map[string]string
+	secretBytes := []byte(plan.SecretJson.ValueString())
+	if err := json.Unmarshal(secretBytes, &secretMap); err != nil {
+		resp.Diagnostics.AddError("Error unmarshal connection secret", " unexpected error: "+err.Error())
+		return
+	}
+
+	secretResult, err := r.dataSourceSecretClient.Post(ctx, result.Identifier, secretMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Error creating data source secret", "Could not create data source secret, unexpected error: "+err.Error())
+		return
+	}
+
+	tflog.Info(ctx, fmt.Sprintf("Connection result %s %s", result.Identifier, secretResult))
 
 }
 
@@ -221,23 +261,14 @@ func (r *dataSourceResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	foo := fmt.Sprintf("ID [%s]  Desc [%s]", state.ID.ValueString(), state.Description.ValueString())
-	tflog.Info(ctx, foo)
-
-	dataSourceList, err := r.client.DataSourceGet()
+	dataSourceList, err := r.client.Get()
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Reading NEOS data system",
-			"Could not read NEOS  data system ID "+state.ID.ValueString()+": "+err.Error(),
-		)
+		resp.Diagnostics.AddError("Error Reading NEOS data system", "Could not read NEOS  data system ID "+state.ID.ValueString()+": "+err.Error())
 		return
 	}
 
-	tflog.Info(ctx, fmt.Sprintf("££ READ iterate over list looking for: %s", state.ID.ValueString()))
 	for _, ds := range dataSourceList.Entities {
-		//		tflog.Info(ctx, fmt.Sprintf("££ READ ITEM: [%s] [%s] %v", ds.Identifier, state.ID.ValueString(), (ds.Identifier == state.ID.ValueString())))
 		if ds.Identifier == state.ID.ValueString() {
-			//			tflog.Info(ctx, fmt.Sprintf("££ READ got one in list [%s]", ds.Identifier))
 			state.ID = types.StringValue(ds.Identifier)
 			state.Name = types.StringValue(ds.Name)
 			state.Label = types.StringValue(ds.Label)
@@ -249,16 +280,21 @@ func (r *dataSourceResource) Read(ctx context.Context, req resource.ReadRequest,
 		}
 	}
 
-	//	tsv, _ := state.ID.ToStringValue(ctx)
-	// Set refreshed state
-	//	tflog.Info(ctx, "££ READ iterate over list")
-	//	tflog.Info(ctx, tsv.String())
-	//	tflog.Info(ctx, state.ID.ValueString())
+	// connection, err := r.connectionClient.Get(state.ID.ValueString())
+	// if err != nil {
+	// 	resp.Diagnostics.AddError("Error Reading NEOS data source connection", "Could not read NEOS  data source connection ID: "+state.ID.ValueString()+": "+err.Error())
+	// 	return
+	// }
+
+	connectionJson := state.ConnectionJson
+
+	//state.ConnectionJson = types.StringValue(connection)
+	state.ConnectionJson = connectionJson
 
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
-		tflog.Info(ctx, "Data system Read Has error")
+		tflog.Info(ctx, "Data source Read Has error")
 		return
 	}
 
@@ -317,7 +353,7 @@ func (r *dataSourceResource) Update(ctx context.Context, req resource.UpdateRequ
 		Links:      links,
 	}
 
-	result, err := r.client.DataSourcePut(ctx, plan.ID.ValueString(), item)
+	result, err := r.client.Put(ctx, plan.ID.ValueString(), item)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating data system",
@@ -327,7 +363,7 @@ func (r *dataSourceResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 	//tflog.Info(ctx, fmt.Sprintf("££ Create Post result [%s] [%s] [%s] [%s] [%s] [%s]", result.Identifier, result.Name, result.Urn, result.Description, result.Label, result.CreatedAt.String()))
 
-	infoResult, err := r.client.DataSourcePutInfo(ctx, plan.ID.ValueString(), eItem)
+	infoResult, err := r.client.PutInfo(ctx, plan.ID.ValueString(), eItem)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating data system",
@@ -335,6 +371,39 @@ func (r *dataSourceResource) Update(ctx context.Context, req resource.UpdateRequ
 		)
 		return
 	}
+
+	connectionResult, err := r.connectionClient.Put(ctx, result.Identifier, plan.ConnectionJson.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Error creating data source connection", "Could not create data source connection, unexpected error: "+err.Error())
+		return
+	}
+
+	//need to get the secret id from the connection?
+	ds, err := r.client.GetById(plan.ID.ValueString())
+
+	tflog.Info(ctx, fmt.Sprintf("Connection result %s %s", result.Identifier, connectionResult))
+
+	var secretMap map[string]string
+	secretBytes := []byte(plan.SecretJson.ValueString())
+	if err := json.Unmarshal(secretBytes, &secretMap); err != nil {
+		resp.Diagnostics.AddError("Error unmarshal connection secret", " unexpected error: "+err.Error())
+		return
+	}
+
+	secret, err := r.secretClient.GetById(ds.SecretIdentifier)
+
+	spr := neos.SecretPutRequest{
+		Name: secret.Name,
+		Data: secretMap,
+	}
+
+	secretResult, err := r.secretClient.Put(ctx, ds.SecretIdentifier, spr)
+	if err != nil {
+		resp.Diagnostics.AddError("Error creating data source secret", "Could not create data source secret, unexpected error: "+err.Error())
+		return
+	}
+
+	tflog.Info(ctx, fmt.Sprintf("Secret put result %s %s", result.Identifier, secretResult.Identifier))
 
 	contactsList, _ := types.ListValueFrom(ctx, types.StringType, infoResult.ContactIds)
 	linksList, _ := types.ListValueFrom(ctx, types.StringType, infoResult.Links)
@@ -349,6 +418,7 @@ func (r *dataSourceResource) Update(ctx context.Context, req resource.UpdateRequ
 	plan.ContactIds = contactsList
 	plan.Links = linksList
 	plan.Owner = types.StringValue(infoResult.Owner)
+	plan.ConnectionJson = types.StringValue(connectionResult)
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -374,7 +444,7 @@ func (r *dataSourceResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	err := r.client.DataSourceDelete(ctx, plan.ID.ValueString())
+	err := r.client.Delete(ctx, plan.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error deleting data system",
@@ -393,15 +463,15 @@ func (r *dataSourceResource) Configure(_ context.Context, req resource.Configure
 	client, ok := req.ProviderData.(*neos.NeosClient)
 
 	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *neos.DataSourceClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
-
+		resp.Diagnostics.AddError("Unexpected Data Source Configure Type", fmt.Sprintf("Expected *neos.DataSourceClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 		return
 	}
 
-	r.client = client
+	r.client = &client.DataSourceClient
+	r.connectionClient = &client.DataSourceConnectionClient
+	r.dataSourceSecretClient = &client.DataSourceSecretClient
+	r.secretClient = &client.SecretClient
+
 }
 
 func (r *dataSourceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

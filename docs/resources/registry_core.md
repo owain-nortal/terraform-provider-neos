@@ -26,7 +26,7 @@ description: |-
 
 ### Read-Only
 
-- `access_key` (String) The access key
+- `access_key_id` (String) The access key id
 - `identifier` (String) The identifier key
-- `last_updated` (String)
+- `secret_key` (String) The secret access key
 - `urn` (String) The URN of the data system which is read only

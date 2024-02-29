@@ -3,11 +3,12 @@ package provider
 import (
 	"context"
 	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/owain-nortal/neos-client-go"
+	neos "github.com/owain-nortal/neos-client-go"
 )
 
 func NewDataUnitDataSource() datasource.DataSource {
@@ -20,7 +21,7 @@ var (
 )
 
 type dataUnitDataSourceV2 struct {
-	client *neos.NeosClient
+	client *neos.DataUnitClient
 }
 
 func (d *dataUnitDataSourceV2) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -33,7 +34,7 @@ func (d *dataUnitDataSourceV2) Read(ctx context.Context, req datasource.ReadRequ
 
 	var state DataUnitDataSourceModelV2
 
-	list, err := d.client.DataUnitGet()
+	list, err := d.client.Get()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read Data System List",
@@ -47,28 +48,28 @@ func (d *dataUnitDataSourceV2) Read(ctx context.Context, req datasource.ReadRequ
 	tflog.Info(ctx, fmt.Sprintf("Abi READ length %d", len(list.Entities)))
 
 	// Map response body to model
-	for _, ds := range list.Entities {
+	// for _, ds := range list.Entities {
 
-		configJson, err := d.client.DataUnitConfigGetBase(ctx, ds.Identifier)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Unable to Read Data System List",
-				err.Error(),
-			)
-			return
-		}
-		dataUnitState := DataUnitModelV2{
-			Identifier:  types.StringValue(ds.Identifier),
-			Name:        types.StringValue(ds.Name),
-			Description: types.StringValue(ds.Description),
-			Label:       types.StringValue(ds.Label),
-			Owner:       types.StringValue(ds.Owner),
-			Urn:         types.StringValue(ds.Urn),
-			ConfigJson:  types.StringValue(string(configJson)),
-		}
-		tflog.Info(ctx, fmt.Sprintf("NEOS - ID: %s ", ds.Identifier))
-		state.Entities = append(state.Entities, dataUnitState)
-	}
+	// 	configJson, err := d.client.ConfigTableGet(ctx, ds.Identifier)
+	// 	if err != nil {
+	// 		resp.Diagnostics.AddError(
+	// 			"Unable to Read Data System List",
+	// 			err.Error(),
+	// 		)
+	// 		return
+	// 	}
+	// 	dataUnitState := DataUnitModelV2{
+	// 		Identifier:  types.StringValue(ds.Identifier),
+	// 		Name:        types.StringValue(ds.Name),
+	// 		Description: types.StringValue(ds.Description),
+	// 		Label:       types.StringValue(ds.Label),
+	// 		Owner:       types.StringValue(ds.Owner),
+	// 		Urn:         types.StringValue(ds.Urn),
+	// 		ConfigJson:  types.StringValue(string(configJson)),
+	// 	}
+	// 	tflog.Info(ctx, fmt.Sprintf("NEOS - ID: %s ", ds.Identifier))
+	// 	state.Entities = append(state.Entities, dataUnitState)
+	// }
 
 	// Set state
 	diags := resp.State.Set(ctx, &state)
@@ -89,15 +90,12 @@ func (d *dataUnitDataSourceV2) Configure(ctx context.Context, req datasource.Con
 
 	client, ok := req.ProviderData.(*neos.NeosClient)
 	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *neos.DataUnitClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
+		resp.Diagnostics.AddError("Unexpected dataUnitDataSourceV2 Configure Type", fmt.Sprintf("Expected *neos.NeosClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 
 		return
 	}
 
-	d.client = client
+	d.client = &client.DataUnitClient
 }
 
 func (d *dataUnitDataSourceV2) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {

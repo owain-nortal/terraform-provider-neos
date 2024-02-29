@@ -3,11 +3,12 @@ package provider
 import (
 	"context"
 	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/owain-nortal/neos-client-go"
+	neos "github.com/owain-nortal/neos-client-go"
 )
 
 func NewDataProductDataSource() datasource.DataSource {
@@ -20,7 +21,7 @@ var (
 )
 
 type dataProductDataSource struct {
-	client *neos.NeosClient
+	client *neos.DataProductClient
 }
 
 func (d *dataProductDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -34,7 +35,7 @@ func (d *dataProductDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 	var state DataProductDataSourceModelV2
 
-	list, err := d.client.DataProductGet()
+	list, err := d.client.Get()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read Data Product List",
@@ -72,7 +73,7 @@ func (d *dataProductDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 // Configure adds the provider configured client to the data source.
 func (d *dataProductDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	tflog.Info(ctx, "Gwen Freddie Data source configure")
+	tflog.Info(ctx, "Data source configure")
 
 	if req.ProviderData == nil {
 		return
@@ -80,15 +81,12 @@ func (d *dataProductDataSource) Configure(ctx context.Context, req datasource.Co
 
 	client, ok := req.ProviderData.(*neos.NeosClient)
 	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *neos.DataProductClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
+		resp.Diagnostics.AddError("Unexpected dataProductDataSource Configure Type", fmt.Sprintf("Expected *neos.NeosClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 
 		return
 	}
 
-	d.client = client
+	d.client = &client.DataProductClient
 }
 
 func (d *dataProductDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -130,7 +128,6 @@ func (d *dataProductDataSource) Schema(_ context.Context, _ datasource.SchemaReq
 								},
 							},
 						},
-						
 					},
 				},
 			},

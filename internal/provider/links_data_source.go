@@ -3,13 +3,14 @@ package provider
 import (
 	"context"
 	"fmt"
+
 	//"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/owain-nortal/neos-client-go"
+	neos "github.com/owain-nortal/neos-client-go"
 )
 
 func NewLinksDataSource() datasource.DataSource {
@@ -22,7 +23,7 @@ var (
 )
 
 type linksDataSourceV2 struct {
-	client *neos.NeosClient
+	client *neos.LinksClient
 }
 
 func (d *linksDataSourceV2) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -35,7 +36,7 @@ func (d *linksDataSourceV2) Read(ctx context.Context, req datasource.ReadRequest
 
 	var state LinksDataSourceModelV2
 
-	list, err := d.client.LinksGet()
+	list, err := d.client.Get()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read Data System List",
@@ -110,15 +111,12 @@ func (d *linksDataSourceV2) Configure(ctx context.Context, req datasource.Config
 
 	client, ok := req.ProviderData.(*neos.NeosClient)
 	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *neos.LinksClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
+		resp.Diagnostics.AddError("Unexpected linksDataSourceV2 Configure Type", fmt.Sprintf("Expected *neos.NeosClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 
 		return
 	}
 
-	d.client = client
+	d.client = &client.LinksClient
 }
 
 func (d *linksDataSourceV2) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {

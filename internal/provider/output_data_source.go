@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/owain-nortal/neos-client-go"
+	neos "github.com/owain-nortal/neos-client-go"
 )
 
 func NewOutputDataSource() datasource.DataSource {
@@ -21,7 +21,7 @@ var (
 )
 
 type outputDataSourceV2 struct {
-	client *neos.NeosClient
+	client *neos.OutputClient
 }
 
 func (d *outputDataSourceV2) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -34,7 +34,7 @@ func (d *outputDataSourceV2) Read(ctx context.Context, req datasource.ReadReques
 
 	var state OutputDataSourceModelV2
 
-	list, err := d.client.OutputGet()
+	list, err := d.client.Get()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read Data System List",
@@ -56,7 +56,7 @@ func (d *outputDataSourceV2) Read(ctx context.Context, req datasource.ReadReques
 			Label:       types.StringValue(ds.Label),
 			Owner:       types.StringValue(ds.Owner),
 			Urn:         types.StringValue(ds.Urn),
-			OutputType:         types.StringValue(ds.OutputType),
+			OutputType:  types.StringValue(ds.OutputType),
 		}
 		tflog.Info(ctx, fmt.Sprintf("NEOS - ID: %s ", ds.Identifier))
 		state.Outputs = append(state.Outputs, dataSystemState)
@@ -81,15 +81,12 @@ func (d *outputDataSourceV2) Configure(ctx context.Context, req datasource.Confi
 
 	client, ok := req.ProviderData.(*neos.NeosClient)
 	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *neos.OutputClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
+		resp.Diagnostics.AddError("Unexpected outputDataSourceV2Configure Type", fmt.Sprintf("Expected *neos.NeosClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 
 		return
 	}
 
-	d.client = client
+	d.client = &client.OutputClient
 }
 
 func (d *outputDataSourceV2) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {

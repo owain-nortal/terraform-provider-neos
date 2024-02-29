@@ -25,5 +25,6 @@ description: |-
 Read-Only:
 
 - `host` (String)
+- `id` (String)
 - `name` (String)
 - `urn` (String)

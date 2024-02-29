@@ -3,11 +3,12 @@ package provider
 import (
 	"context"
 	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/owain-nortal/neos-client-go"
+	neos "github.com/owain-nortal/neos-client-go"
 )
 
 func NewRegistryCoreDataSource() datasource.DataSource {
@@ -20,7 +21,7 @@ var (
 )
 
 type registryCoreDataSource struct {
-	client *neos.NeosClient
+	client *neos.RegistryCoreClient
 }
 
 func (d *registryCoreDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -35,7 +36,7 @@ func (d *registryCoreDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	state.RegistryCores[0].ID = types.StringValue("00000000-0000-0000-0000-000000000000")
 
-	list, err := d.client.RegistryCoreGet()
+	list, err := d.client.Get()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to read registry core List",
@@ -43,10 +44,6 @@ func (d *registryCoreDataSource) Read(ctx context.Context, req datasource.ReadRe
 		)
 		return
 	}
-
-	// tflog.Info(ctx, "Abi READ Post error ")
-
-	// tflog.Info(ctx, fmt.Sprintf("Abi READ length %d", len(list.Entities)))
 
 	// Map response body to model
 	for _, ds := range list.Cores {
@@ -76,17 +73,16 @@ func (d *registryCoreDataSource) Configure(ctx context.Context, req datasource.C
 		return
 	}
 
-	client, ok := req.ProviderData.(*neos.NeosClient)
+	var client *neos.NeosClient
+	var ok bool
+	client, ok = req.ProviderData.(*neos.NeosClient)
 	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *neos.NeosClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
+		resp.Diagnostics.AddError("Unexpected registryCoreDataSource Configure Type", fmt.Sprintf("Expected *neos.NeosClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 
 		return
 	}
 
-	d.client = client
+	d.client = &client.RegistryCoreClient
 }
 
 func (d *registryCoreDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {

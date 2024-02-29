@@ -3,11 +3,12 @@ package provider
 import (
 	"context"
 	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/owain-nortal/neos-client-go"
+	neos "github.com/owain-nortal/neos-client-go"
 )
 
 func NewDataSourceDataSource() datasource.DataSource {
@@ -20,7 +21,7 @@ var (
 )
 
 type dataSourceDataSourceV2 struct {
-	client *neos.NeosClient
+	client *neos.DataSourceClient
 }
 
 func (d *dataSourceDataSourceV2) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -33,7 +34,7 @@ func (d *dataSourceDataSourceV2) Read(ctx context.Context, req datasource.ReadRe
 
 	var state DataSourceDataSourceModelV2
 
-	list, err := d.client.DataSourceGet()
+	list, err := d.client.Get()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read Data System List",
@@ -42,9 +43,9 @@ func (d *dataSourceDataSourceV2) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	tflog.Info(ctx, "Abi READ Post error ")
+	tflog.Info(ctx, "READ Post error ")
 
-	tflog.Info(ctx, fmt.Sprintf("Abi READ length %d", len(list.Entities)))
+	tflog.Info(ctx, fmt.Sprintf("READ length %d", len(list.Entities)))
 
 	// Map response body to model
 	for _, ds := range list.Entities {
@@ -71,7 +72,7 @@ func (d *dataSourceDataSourceV2) Read(ctx context.Context, req datasource.ReadRe
 
 // Configure adds the provider configured client to the data source.
 func (d *dataSourceDataSourceV2) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	tflog.Info(ctx, "Gwen Freddie Data source configure")
+	tflog.Info(ctx, "Data source configure")
 
 	if req.ProviderData == nil {
 		return
@@ -79,15 +80,12 @@ func (d *dataSourceDataSourceV2) Configure(ctx context.Context, req datasource.C
 
 	client, ok := req.ProviderData.(*neos.NeosClient)
 	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *neos.DataSourceClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
+		resp.Diagnostics.AddError("Unexpected dataSourceDataSourceV2 Configure Type", fmt.Sprintf("Expected *neos.NeosClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 
 		return
 	}
 
-	d.client = client
+	d.client = &client.DataSourceClient
 }
 
 func (d *dataSourceDataSourceV2) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -116,6 +114,9 @@ func (d *dataSourceDataSourceV2) Schema(_ context.Context, _ datasource.SchemaRe
 							Computed: true,
 						},
 						"owner": schema.StringAttribute{
+							Computed: true,
+						},
+						"connection_json": schema.StringAttribute{
 							Computed: true,
 						},
 						"state": schema.SingleNestedAttribute{

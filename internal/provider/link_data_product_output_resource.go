@@ -4,22 +4,22 @@ import (
 	"context"
 	"fmt"
 
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/owain-nortal/neos-client-go"
-	"time"
+	neos "github.com/owain-nortal/neos-client-go"
 )
-
 
 func NewLinkDataProductOutputResource() resource.Resource {
 	return &linkDataProductOutputResource{}
 }
 
 type linkDataProductOutputResource struct {
-	client *neos.NeosClient
+	client *neos.LinksClient
 }
 
 var (
@@ -81,7 +81,7 @@ func (r *linkDataProductOutputResource) Create(ctx context.Context, req resource
 
 	tflog.Info(ctx, fmt.Sprintf("linkDataProductOutputResource Create Post request [%s] [%s]", plan.ParentIdentifier.ValueString(), plan.ChildIdentifier.ValueString()))
 
-	result, err := r.client.LinkDataProductOutputPost(ctx, plan.ParentIdentifier.ValueString(), plan.ChildIdentifier.ValueString())
+	result, err := r.client.LinkDataProductToOutput(ctx, plan.ParentIdentifier.ValueString(), plan.ChildIdentifier.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating link",
@@ -117,7 +117,7 @@ func (r *linkDataProductOutputResource) Read(ctx context.Context, req resource.R
 
 	tflog.Info(ctx, fmt.Sprintf("linkDataProductOutputResource Parent ID [%s]  Desc [%s]", state.ParentIdentifier.ValueString(), state.ChildIdentifier.ValueString()))
 
-	linksList, err := r.client.LinksGet()
+	linksList, err := r.client.Get()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading NEOS data system",
@@ -155,7 +155,7 @@ func (r *linkDataProductOutputResource) Update(ctx context.Context, req resource
 		return
 	}
 
-	result, err := r.client.LinkDataProductOutputPost(ctx, plan.ParentIdentifier.ValueString(), plan.ChildIdentifier.String())
+	result, err := r.client.LinkDataProductToOutput(ctx, plan.ParentIdentifier.ValueString(), plan.ChildIdentifier.String())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating link",
@@ -191,7 +191,7 @@ func (r *linkDataProductOutputResource) Delete(ctx context.Context, req resource
 		return
 	}
 
-	err := r.client.LinkDataProductOutputDelete(ctx, plan.ParentIdentifier.ValueString(), plan.ChildIdentifier.ValueString())
+	err := r.client.DeleteLinkDataProductToOutput(ctx, plan.ParentIdentifier.ValueString(), plan.ChildIdentifier.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting link", "Could not delete link, unexpected error: "+err.Error())
 		return
@@ -207,11 +207,11 @@ func (r *linkDataProductOutputResource) Configure(_ context.Context, req resourc
 	client, ok := req.ProviderData.(*neos.NeosClient)
 
 	if !ok {
-		resp.Diagnostics.AddError("Unexpected Data Source Configure Type", fmt.Sprintf("Expected *neos.LinkDataProductOutputClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
+		resp.Diagnostics.AddError("Unexpected Data Source Configure Type", fmt.Sprintf("Expected *neos.LinksClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 		return
 	}
 
-	r.client = client
+	r.client = &client.LinksClient
 }
 
 func (r *linkDataProductOutputResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
