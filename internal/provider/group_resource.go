@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+
 	//"sort"
 	"time"
 
@@ -16,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/owain-nortal/neos-client-go"
+	neos "github.com/owain-nortal/neos-client-go"
 	"golang.org/x/exp/slices"
 )
 

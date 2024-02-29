@@ -5,15 +5,18 @@ import (
 	"fmt"
 
 	"encoding/json"
+
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+
 	// "github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	// "github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	jt "github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/owain-nortal/neos-client-go"
+	neos "github.com/owain-nortal/neos-client-go"
+
 	//"strings"
 	"time"
 )

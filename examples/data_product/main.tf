@@ -92,7 +92,7 @@ resource "neos_data_product" "dp-test1" {
         "optional"    = false
         "data_type" = {
           "meta" = [
-            { "foo" : "base" }  
+            { "foo" : "base" }
           ],
           "column_type" : "STRING"
         },

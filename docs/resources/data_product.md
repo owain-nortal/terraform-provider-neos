@@ -19,17 +19,49 @@ description: |-
 
 - `contact_ids` (List of String) list of contacts Ids
 - `links` (List of String) list of links
-- `name` (String) Name of the data system
+- `name` (String) Name of the data product
 
 ### Optional
 
-- `description` (String) Description of the data system
-- `label` (String) Label for the data system
-- `owner` (String) The owner of the data system
+- `builder_json` (String) builder json
+- `description` (String) Description of the data product
+- `label` (String) Label for the data product
+- `owner` (String) The owner of the data product
+- `schema` (Attributes) (see [below for nested schema](#nestedatt--schema))
 
 ### Read-Only
 
-- `created_at` (String) when the data system was created
-- `id` (String) The Unique ID of the data system
+- `created_at` (String) when the data product was created
+- `id` (String) The Unique ID of the data product
 - `last_updated` (String)
-- `urn` (String) The URN of the data system which is read only
+- `urn` (String) The URN of the data product which is read only
+
+<a id="nestedatt--schema"></a>
+### Nested Schema for `schema`
+
+Optional:
+
+- `fields` (Attributes List) (see [below for nested schema](#nestedatt--schema--fields))
+- `product_type` (String) product type 'stored' etc
+
+<a id="nestedatt--schema--fields"></a>
+### Nested Schema for `schema.fields`
+
+Required:
+
+- `name` (String) Name of the schema field
+- `optional` (Boolean) set the schmea field to be a optional
+- `primary` (Boolean) set the schmea field to be a primary key
+
+Optional:
+
+- `data_type` (Attributes) set the schmea field data type (see [below for nested schema](#nestedatt--schema--fields--data_type))
+- `description` (String) Description of the schema field
+
+<a id="nestedatt--schema--fields--data_type"></a>
+### Nested Schema for `schema.fields.data_type`
+
+Required:
+
+- `column_type` (String) set the schmea field column type
+- `meta` (Map of String)

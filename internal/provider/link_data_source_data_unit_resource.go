@@ -4,13 +4,14 @@ import (
 	"context"
 	"fmt"
 
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/owain-nortal/neos-client-go"
-	"time"
+	neos "github.com/owain-nortal/neos-client-go"
 )
 
 func NewLinkDataSourceDataUnitResource() resource.Resource {

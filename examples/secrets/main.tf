@@ -21,7 +21,7 @@ provider "neos" {
 
 
 resource "neos_secret" "sec-test-1" {
-  name        = "TestSecret"
+  name = "TestSecret"
   data = {
     username = "abc123"
     password = "secret-pass123"
