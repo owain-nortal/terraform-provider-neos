@@ -3,9 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-
-	//"time"
-
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -87,7 +84,7 @@ func (d *linksDataSourceV2) Read(ctx context.Context, req datasource.ReadRequest
 			Parent: parent,
 			Child:  child,
 		}
-		tflog.Info(ctx, fmt.Sprintf("NEOS Link appending to state"))
+
 		state.Links = append(state.Links, linksState)
 	}
 

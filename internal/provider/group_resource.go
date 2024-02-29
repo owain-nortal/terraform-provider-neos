@@ -3,10 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-
-	//"sort"
-	"time"
-
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -19,12 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	neos "github.com/owain-nortal/neos-client-go"
 	"golang.org/x/exp/slices"
+	"time"
 )
-
-// Ensure the implementation satisfies the expected interfaces.
-// var (
-// 	_ resource.Resource = &groupResource{}
-// )
 
 // New groupResource is a helper function to simplify the provider implementation.
 func NewGroupResource() resource.Resource {
@@ -254,7 +246,7 @@ func (r *groupResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	shouldReturn := r.addUsersToGroup(ctx, plan, resp, grp, err)
+	shouldReturn := r.addUsersToGroup(ctx, plan, resp, grp)
 	if shouldReturn {
 		return
 	}
@@ -304,7 +296,7 @@ func (r *groupResource) deleteUsersFromGroup(ctx context.Context, plan groupReso
 	return resp.Diagnostics.HasError()
 }
 
-func (r *groupResource) addUsersToGroup(ctx context.Context, plan groupResourceModel, resp *resource.UpdateResponse, grp neos.Group, err error) bool {
+func (r *groupResource) addUsersToGroup(ctx context.Context, plan groupResourceModel, resp *resource.UpdateResponse, grp neos.Group) bool {
 	addList := []string{}
 	tvl, diags := plan.Principals.ToSetValue(ctx)
 	resp.Diagnostics.Append(diags...)
@@ -325,11 +317,14 @@ func (r *groupResource) addUsersToGroup(ctx context.Context, plan groupResourceM
 		}
 	}
 
-	_, err = r.client.PrincipalsPost(ctx, plan.ID.ValueString(), neos.GroupPrincipalPostRequest{Principals: addList})
+	gg, err := r.client.PrincipalsPost(ctx, plan.ID.ValueString(), neos.GroupPrincipalPostRequest{Principals: addList})
 	if err != nil {
 		resp.Diagnostics.AddError("Error posting principals", "Could not post to update principals, unexpected error: "+err.Error())
 		return true
 	}
+
+	tflog.Info(ctx, fmt.Sprintf("ID: %s ", gg.Identifier))
+
 	return false
 }
 

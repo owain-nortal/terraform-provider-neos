@@ -380,7 +380,10 @@ func (r *dataSourceResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	//need to get the secret id from the connection?
 	ds, err := r.client.GetById(plan.ID.ValueString())
-
+	if err != nil {
+		resp.Diagnostics.AddError("Error GetById client", " unexpected error: "+err.Error())
+		return
+	}
 	tflog.Info(ctx, fmt.Sprintf("Connection result %s %s", result.Identifier, connectionResult))
 
 	var secretMap map[string]string
@@ -391,7 +394,10 @@ func (r *dataSourceResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	secret, err := r.secretClient.GetById(ds.SecretIdentifier)
-
+	if err != nil {
+		resp.Diagnostics.AddError("Error GetById secret", " unexpected error: "+err.Error())
+		return
+	}
 	spr := neos.SecretPutRequest{
 		Name: secret.Name,
 		Data: secretMap,
