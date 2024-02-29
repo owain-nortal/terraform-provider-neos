@@ -14,10 +14,9 @@ const (
 	providerConfig = `
 provider "neos" {
   username = "owain.perry"
-  password = "**Marley22"
-  iam_host      = "sandbox.city3os.com"
+  password = "password123"
   core_host     = "localhost"
-  registry_host = "sandbox.city3os.com"
+  hub_host = "sandbox.city3os.com"
 }
 `
 )
