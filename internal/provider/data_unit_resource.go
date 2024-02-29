@@ -370,7 +370,6 @@ func (r *dataUnitResource) Create(ctx context.Context, req resource.CreateReques
 		)
 		return
 	}
-	//	tflog.Info(ctx, fmt.Sprintf("££ Create Post result [%s] [%s] [%s] [%s] [%s] [%s]", result.Identifier, result.Name, result.Urn, result.Description, result.Label, result.CreatedAt.String()))
 	id := result.Identifier
 	plan.ID = types.StringValue(id)
 	plan.Name = types.StringValue(result.Name)
@@ -378,29 +377,12 @@ func (r *dataUnitResource) Create(ctx context.Context, req resource.CreateReques
 	plan.Description = types.StringValue(result.Description)
 	plan.Label = types.StringValue(result.Label)
 	plan.CreatedAt = types.StringValue(result.CreatedAt.String())
-	// dut := dataUnitConfigTableModel{
-	// 	 Table:  types.StringValue("123"),
-	// }
-	// plan.Config.Table = &dut
-	// config
-
 	configJson := plan.ConfigJson.ValueString()
-	tflog.Info(ctx, fmt.Sprintf("%s", configJson))
-
-	// ordered, err := r.JSONRemarshal([]byte(configJson))
-	// if err != nil {
-	// 	resp.Diagnostics.AddError("Error ordering data unit config ", "unexpected error: "+err.Error())
-	// 	return
-	// }
-
 	_, err = r.client.ConfigPut(ctx, result.Identifier, configJson)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating data unit config ", "Could not create data unit config, unexpected error: "+err.Error())
 		return
 	}
-
-	// var res map[string]map[string]interface{}
-	// json.Unmarshal(dd, &res)
 
 	plan.ConfigJson = types.StringValue(configJson)
 	//tflog.Info(ctx, fmt.Sprintf("%s", dd.Configuration))
@@ -664,8 +646,6 @@ func (r *dataUnitResource) Update(ctx context.Context, req resource.UpdateReques
 		resp.Diagnostics.AddError("Error updating data unit", "Could not put data unit, unexpected error: "+err.Error())
 		return
 	}
-	//tflog.Info(ctx, fmt.Sprintf("££ Create Post result [%s] [%s] [%s] [%s] [%s] [%s]", result.Identifier, result.Name, result.Urn, result.Description, result.Label, result.CreatedAt.String()))
-
 	infoResult, err := r.client.PutInfo(ctx, plan.ID.ValueString(), eItem)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating data unit", "Could not put data unit, unexpected error: "+err.Error())
@@ -687,14 +667,6 @@ func (r *dataUnitResource) Update(ctx context.Context, req resource.UpdateReques
 	plan.Owner = types.StringValue(infoResult.Owner)
 
 	configJson := plan.ConfigJson.ValueString()
-	tflog.Info(ctx, fmt.Sprintf("%s", configJson))
-
-	// ordered, err := r.JSONRemarshal([]byte(configJson))
-	// if err != nil {
-	// 	resp.Diagnostics.AddError("Error ordering data unit config ", "unexpected error: "+err.Error())
-	// 	return
-	// }
-
 	_, err = r.client.ConfigPut(ctx, result.Identifier, configJson)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating data unit config ", "Could not update data unit config, unexpected error: "+err.Error())

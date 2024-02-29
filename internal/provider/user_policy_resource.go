@@ -2,29 +2,17 @@ package provider
 
 import (
 	"context"
-	"fmt"
-
 	"encoding/json"
-
+	"fmt"
+	jt "github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-
-	// "github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	// "github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	jt "github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	neos "github.com/owain-nortal/neos-client-go"
-
-	//"strings"
 	"time"
 )
-
-// Ensure the implementation satisfies the expected interfaces.
-// var (
-// 	_ resource.Resource = &userPolicyResource{}
-// )
 
 // New userPolicyResource is a helper function to simplify the provider implementation.
 func NewUserPolicyResource() resource.Resource {

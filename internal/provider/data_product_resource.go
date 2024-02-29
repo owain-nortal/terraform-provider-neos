@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	//"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -15,13 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	neos "github.com/owain-nortal/neos-client-go"
-	//"strings"
 )
-
-// Ensure the implementation satisfies the expected interfaces.
-// var (
-// 	_ resource.Resource = &dataProductResource{}
-// )
 
 // New data productResource is a helper function to simplify the provider implementation.
 func NewDataProductResource() resource.Resource {
@@ -156,12 +149,6 @@ func (r *dataProductResource) Schema(_ context.Context, _ resource.SchemaRequest
 									Required:    false,
 									Description: "Description of the schema field",
 								},
-								// "type": schema.StringAttribute{
-								// 	Computed:    false,
-								// 	Optional:    true,
-								// 	Required:    false,
-								// 	Description: "the type of the column",
-								// },
 								"primary": schema.BoolAttribute{
 									Computed:    false,
 									Optional:    false,
@@ -190,9 +177,6 @@ func (r *dataProductResource) Schema(_ context.Context, _ resource.SchemaRequest
 											Computed:    false,
 											Optional:    false,
 											Required:    true,
-											// NestedObject: schema.NestedAttributeObject{
-											// 	Attributes: map[string]schema.Attribute{},
-											// },
 										},
 									},
 									Description: "set the schmea field data type",
@@ -233,7 +217,6 @@ type DataProductFieldResourceModel struct {
 	Primary     types.Bool                       `tfsdk:"primary"`
 	Optional    types.Bool                       `tfsdk:"optional"`
 	DataType    DataProductDataTypeResourceModel `tfsdk:"data_type"`
-	//Type        types.String                     `tfsdk:"type"`
 }
 
 type DataProductDataTypeResourceModel struct {
@@ -244,7 +227,6 @@ type DataProductDataTypeResourceModel struct {
 // Create a new resource.
 func (r *dataProductResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	tflog.Info(ctx, "dataProductResource Create Get plan")
-	// Retrieve values from plan
 	var plan dataProductResourceModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -286,8 +268,6 @@ func (r *dataProductResource) Create(ctx context.Context, req resource.CreateReq
 			Links:      links,
 		},
 	}
-
-	//	tflog.Info(ctx, fmt.Sprintf("££ Create Post request [%s] [%s] [%s] [%s]", plan.ID, plan.Name, plan.Label, plan.Description))
 
 	tflog.Info(ctx, "dataProductResource Create date product post")
 	result, err := r.client.Post(ctx, item)
@@ -346,8 +326,7 @@ func (r *dataProductResource) Create(ctx context.Context, req resource.CreateReq
 		tflog.Info(ctx, "dataProductResource into schemaResult.Fields")
 		tflog.Info(ctx, fmt.Sprintf("dataProductResource ColumnType values [%s] ", types.StringValue(v.DataType.ColumnType)))
 
-		meta := types.Map{}
-		meta, diag = types.MapValueFrom(ctx, types.StringType, v.DataType.Meta)
+		meta, diag := types.MapValueFrom(ctx, types.StringType, v.DataType.Meta)
 		resp.Diagnostics.Append(diag...)
 		if resp.Diagnostics.HasError() {
 			resp.Diagnostics.AddError("ErrorMapping values for datatype meta ", "Could not create data product schema, unexpected error: "+err.Error())
@@ -402,22 +381,17 @@ func (r *dataProductResource) Create(ctx context.Context, req resource.CreateReq
 		Fields:      pfields,
 	}
 
-	// tflog.Info(ctx, fmt.Sprintf("PLAN =>>  %v ", plan.Schema.Fields[0].Tags ))
-
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	//	tflog.Info(ctx, fmt.Sprintf("ID [%s] Desc[%s]", plan.ID, plan.Description))
-
 }
 
 // Read refreshes the Terraform state with the latest data.
 // Read resource information.
 func (r *dataProductResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// Get current state
 
 	tflog.Info(ctx, "DP READ Get current state")
 
@@ -478,8 +452,6 @@ func (r *dataProductResource) Read(ctx context.Context, req resource.ReadRequest
 func convertSchemaToModel(ctx context.Context, dataProductSchema neos.DataProductSchema, resp *resource.ReadResponse) (DataProductSchemaModel, bool) {
 	fields := []DataProductFieldResourceModel{}
 	for _, v := range dataProductSchema.Fields {
-
-		meta := types.Map{}
 		meta, diag := types.MapValueFrom(ctx, types.StringType, v.DataType.Meta)
 		resp.Diagnostics.Append(diag...)
 		if resp.Diagnostics.HasError() {
@@ -644,8 +616,7 @@ func (r *dataProductResource) Update(ctx context.Context, req resource.UpdateReq
 
 	for _, v := range schemaResult.Fields {
 		tflog.Info(ctx, fmt.Sprintf("dataProductResource ColumnType values [%s] ", types.StringValue(v.DataType.ColumnType)))
-		meta := types.Map{}
-		meta, diag = types.MapValueFrom(ctx, types.StringType, v.DataType.Meta)
+		meta, diag := types.MapValueFrom(ctx, types.StringType, v.DataType.Meta)
 		resp.Diagnostics.Append(diag...)
 		if resp.Diagnostics.HasError() {
 			resp.Diagnostics.AddError(
