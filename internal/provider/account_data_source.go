@@ -20,11 +20,11 @@ var (
 )
 
 type accountDataSource struct {
-	client *neos.DataSourceClient
+	client *neos.AccountClient
 }
 
 func (d *accountDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_data_source"
+	resp.TypeName = req.ProviderTypeName + "_account"
 }
 
 func (d *accountDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -33,24 +33,24 @@ func (d *accountDataSource) Read(ctx context.Context, req datasource.ReadRequest
 
 	var state AccountDataSourceModel
 
-	list, err := d.client.Get()
+	list, err := d.client.Get("")
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to Read Data System List", err.Error())
 		return
 	}
 
-	 // Map response body to model
-	for _, ds := range list.Entities {
-		dataSourceState := DataSourceModelV2{
+	// Map response body to model
+	for _, ds := range list.Accounts {
+		accountState := AccountModel{
 			Identifier:  types.StringValue(ds.Identifier),
 			Name:        types.StringValue(ds.Name),
 			Description: types.StringValue(ds.Description),
-			Label:       types.StringValue(ds.Label),
+			DisplayName: types.StringValue(ds.DisplayName),
 			Owner:       types.StringValue(ds.Owner),
 			Urn:         types.StringValue(ds.Urn),
 		}
 		tflog.Info(ctx, fmt.Sprintf("NEOS - ID: %s ", ds.Identifier))
-		state.DataSources = append(state.DataSources, dataSourceState)
+		state.AccountModel = append(state.AccountModel, accountState)
 	}
 
 	// Set state
@@ -70,17 +70,13 @@ func (d *accountDataSource) Configure(ctx context.Context, req datasource.Config
 		return
 	}
 
-	client, ok := req.ProviderData.(*neos.DataSourceClient)
+	client, ok := req.ProviderData.(*neos.NeosClient)
 	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *neos.DataSourceClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
-
+		resp.Diagnostics.AddError("Unexpected Account Configure Type", fmt.Sprintf("Expected *neos.NeosClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 		return
 	}
 
-	d.client = client
+	d.client = &client.AccountClient
 }
 
 func (d *accountDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -102,7 +98,10 @@ func (d *accountDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 						"description": schema.StringAttribute{
 							Computed: true,
 						},
-						"label": schema.StringAttribute{
+						"display_name": schema.StringAttribute{
+							Computed: true,
+						},
+						"is_system": schema.BoolAttribute{
 							Computed: true,
 						},
 						"created_at": schema.StringAttribute{
@@ -110,17 +109,6 @@ func (d *accountDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 						},
 						"owner": schema.StringAttribute{
 							Computed: true,
-						},
-						"state": schema.SingleNestedAttribute{
-							Computed: true,
-							Attributes: map[string]schema.Attribute{
-								"state": schema.StringAttribute{
-									Computed: true,
-								},
-								"healthy": schema.BoolAttribute{
-									Computed: true,
-								},
-							},
 						},
 					},
 				},
@@ -130,22 +118,16 @@ func (d *accountDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 }
 
 type AccountDataSourceModel struct {
-	DataSources []DataSourceModelV2 `tfsdk:"datasource"`
+	AccountModel []AccountModel `tfsdk:"account"`
 }
 
 // coffeesModel maps coffees schema data.
 type AccountModel struct {
-	Identifier  types.String           `tfsdk:"id"`
-	Urn         types.String           `tfsdk:"urn"`
-	Name        types.String           `tfsdk:"name"`
-	Description types.String           `tfsdk:"description"`
-	Label       types.String           `tfsdk:"label"`
-	Owner       types.String           `tfsdk:"owner"`
-	CreatedAt   types.String           `tfsdk:"created_at"`
-	State       DataSourceStateModelV2 `tfsdk:"state"`
-}
-
-type AccountStateModel struct {
-	State   types.String `tfsdk:"state"`
-	Healthy types.Bool   `tfsdk:"healthy"`
+	Identifier  types.String `tfsdk:"id"`
+	Description types.String `tfsdk:"description"`
+	Urn         types.String `tfsdk:"urn"`
+	Name        types.String `tfsdk:"name"`
+	Owner       types.String `tfsdk:"owner"`
+	IsSystem    types.Bool   `tfsdk:"is_system"`
+	DisplayName types.String `tfsdk:"display_name"`
 }

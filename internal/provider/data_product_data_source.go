@@ -20,7 +20,7 @@ var (
 )
 
 type dataProductDataSource struct {
-	client *neos.DataProductClient	
+	client *neos.DataProductClient
 }
 
 func (d *dataProductDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -78,17 +78,14 @@ func (d *dataProductDataSource) Configure(ctx context.Context, req datasource.Co
 		return
 	}
 
-	client, ok := req.ProviderData.(*neos.DataProductClient)
+	client, ok := req.ProviderData.(*neos.NeosClient)
 	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *neos.DataProductClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
+		resp.Diagnostics.AddError("Unexpected dataProductDataSource Configure Type", fmt.Sprintf("Expected *neos.NeosClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 
 		return
 	}
 
-	d.client = client
+	d.client = &client.DataProductClient
 }
 
 func (d *dataProductDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -130,7 +127,6 @@ func (d *dataProductDataSource) Schema(_ context.Context, _ datasource.SchemaReq
 								},
 							},
 						},
-						
 					},
 				},
 			},

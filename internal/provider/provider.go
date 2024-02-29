@@ -308,6 +308,10 @@ func (p *neosProvider) DataSources(_ context.Context) []func() datasource.DataSo
 		NewDataSourceDataSource,
 		NewDataUnitDataSource,
 		NewLinksDataSource,
+		NewAccountDataSource,
+		NewGroupDataSource,
+		NewUserDataSource,
+		NewUserPolicyDataSource,
 	}
 }
 
@@ -325,5 +329,9 @@ func (p *neosProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewLinkDataProductOutputResource,
 		NewLinkDataProductDataProductResource,
 		NewSecretResource,
+		NewAccountResource,
+		NewGroupResource,
+		NewUserResource,
+		NewUserPolicyResource,
 	}
 }

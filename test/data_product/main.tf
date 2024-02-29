@@ -8,7 +8,7 @@ terraform {
 
 provider "neos" {
   username  = "neosadmin"
-  password  = "**Gwen11"
+  password  = "**"
   hub_host  = "owain10.neosdata.cloud"
   core_host = "owain10.neosdata.cloud"
   account   = "root"
@@ -101,7 +101,6 @@ resource "neos_data_product" "dp-json" {
   links       = [""]
   contact_ids = ["jane C level", "martin C level"]
   builder_json = jsonencode(
-
     {
       "config" : {
         "docker_tag" : "v0.3.64",
