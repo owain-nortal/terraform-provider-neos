@@ -95,6 +95,15 @@ func (r *registryCoreResource) Schema(_ context.Context, _ resource.SchemaReques
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"account": schema.StringAttribute{
+				Computed:    false,
+				Required:    true,
+				Optional:    false,
+				Description: "Account if not root",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			"partition": schema.StringAttribute{
 				Computed:    false,
 				Required:    true,
@@ -117,6 +126,7 @@ type registryCoreResourceModel struct {
 	Name        types.String `tfsdk:"name"`
 	Host        types.String `tfsdk:"host"`
 	Partition   types.String `tfsdk:"partition"`
+	Account     types.String `tfsdk:"account"`
 }
 
 // Create a new resource.
@@ -135,7 +145,7 @@ func (r *registryCoreResource) Create(ctx context.Context, req resource.CreateRe
 		Partition: plan.Partition.String(),
 	}
 
-	result, err := r.client.Post(ctx, item)
+	result, err := r.client.Post(ctx, item, plan.Account.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating registry entry for core", "Could not create registry entry, unexpected error: "+err.Error())
 		return
@@ -165,7 +175,7 @@ func (r *registryCoreResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	dataSystemList, err := r.client.Get()
+	dataSystemList, err := r.client.Get(state.Account.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading NEOS cores from registry", "Could not read NEOS  data system ID "+": "+err.Error())
@@ -221,7 +231,7 @@ func (r *registryCoreResource) Delete(ctx context.Context, req resource.DeleteRe
 
 	tflog.Info(ctx, fmt.Sprintf("registryCoreResource delete id %s", plan.Identifier.ValueString()))
 
-	err := r.client.Delete(ctx, plan.Identifier.ValueString())
+	err := r.client.Delete(ctx, plan.Identifier.ValueString(), plan.Account.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting core from registry", "Could not delete core from registry, unexpected error: "+err.Error())
 		return

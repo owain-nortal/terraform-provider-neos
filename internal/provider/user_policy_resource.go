@@ -61,12 +61,12 @@ func (r *userPolicyResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Optional:    false,
 				Description: "the Policy",
 			},
-			// "account": schema.StringAttribute{
-			// 	Computed:    true,
-			// 	Optional:    false,
-			// 	Required:    false,
-			// 	Description: "account",
-			// },
+			"account": schema.StringAttribute{
+				Computed:    false,
+				Optional:    true,
+				Required:    false,
+				Description: "account",
+			},
 			"last_updated": schema.StringAttribute{
 				Computed: true,
 			},
@@ -79,7 +79,7 @@ type userPolicyResourceModel struct {
 	ID          types.String  `tfsdk:"id"`
 	Policy      jt.Normalized `tfsdk:"policy_json"`
 	LastUpdated types.String  `tfsdk:"last_updated"`
-	//Account     types.String `tfsdk:"account"`
+	Account     types.String  `tfsdk:"account"`
 }
 
 // Create a new resource.
@@ -99,7 +99,7 @@ func (r *userPolicyResource) Create(ctx context.Context, req resource.CreateRequ
 		Policy: ss,
 	}
 
-	_, err := r.client.Post(ctx, item, r.client.Account)
+	_, err := r.client.Post(ctx, item, plan.Account.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating policy", "Could not create policy, unexpected error: "+err.Error())
 		return
@@ -140,7 +140,7 @@ func (r *userPolicyResource) Read(ctx context.Context, req resource.ReadRequest,
 	// TODO: need to not hard code the paritition to ksa
 	//nrn := fmt.Sprintf("nrn:ksa:iam::%s:user:%s", state.Account.ValueString(), )
 
-	userPolicy, err := r.client.Get(state.ID.ValueString(), r.client.Account)
+	userPolicy, err := r.client.Get(state.ID.ValueString(), state.Account.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error Reading NEOS userPolicy", "Could not read NEOS  userPolicy ID "+state.ID.ValueString()+": "+err.Error())
 		return
@@ -186,7 +186,7 @@ func (r *userPolicyResource) Update(ctx context.Context, req resource.UpdateRequ
 		Policy: ss,
 	}
 
-	_, err := r.client.Put(ctx, plan.ID.ValueString(), dspr, r.client.Account)
+	_, err := r.client.Put(ctx, plan.ID.ValueString(), dspr, plan.Account.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating userPolicy", "Could not put userPolicy, unexpected error: "+err.Error())
 		return
@@ -217,7 +217,7 @@ func (r *userPolicyResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	err := r.client.Delete(ctx, plan.ID.ValueString(), r.client.Account)
+	err := r.client.Delete(ctx, plan.ID.ValueString(), plan.Account.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting userPolicy", "Could not delete userPolicy, unexpected error: "+err.Error())
 		return

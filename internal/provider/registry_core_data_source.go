@@ -36,7 +36,7 @@ func (d *registryCoreDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	state.RegistryCores[0].ID = types.StringValue("00000000-0000-0000-0000-000000000000")
 
-	list, err := d.client.Get()
+	list, err := d.client.Get("root")
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to read registry core List",

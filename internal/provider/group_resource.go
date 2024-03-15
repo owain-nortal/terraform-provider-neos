@@ -83,6 +83,12 @@ func (r *groupResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			"last_updated": schema.StringAttribute{
 				Computed: true,
 			},
+			"account": schema.StringAttribute{
+				Computed:    false,
+				Optional:    true,
+				Required:    false,
+				Description: "account if not root",
+			},
 		},
 	}
 }
@@ -95,6 +101,7 @@ type groupResourceModel struct {
 	Principals  types.Set    `tfsdk:"principals"`
 	IsSystem    types.Bool   `tfsdk:"is_system"`
 	LastUpdated types.String `tfsdk:"last_updated"`
+	Account     types.String `tfsdk:"account"`
 }
 
 func SortListValueIntoStringArray(ctx context.Context, lv basetypes.SetValue) (diag.Diagnostics, []string) {
@@ -127,7 +134,7 @@ func (r *groupResource) Create(ctx context.Context, req resource.CreateRequest, 
 		Description: plan.Description.String(),
 	}
 
-	result, err := r.client.Post(ctx, item)
+	result, err := r.client.Post(ctx, item, plan.Account.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating   group", "Could not create   group, unexpected error: "+err.Error())
 		return
@@ -148,7 +155,7 @@ func (r *groupResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	if len(gppr.Principals) > 0 {
-		_, err := r.client.PrincipalsPost(ctx, plan.ID.ValueString(), gppr)
+		_, err := r.client.PrincipalsPost(ctx, plan.ID.ValueString(), gppr, plan.Account.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError("Error creating   group Principals", "Could not create group Principals, unexpected error: "+err.Error())
 			return
@@ -182,7 +189,7 @@ func (r *groupResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	foo := fmt.Sprintf("ID [%s]  Desc [%s]", state.ID.ValueString(), state.Description.ValueString())
 	tflog.Info(ctx, foo)
 
-	groupList, err := r.client.List("")
+	groupList, err := r.client.List(state.Account.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error Reading NEOS group", "Could not read NEOS  group ID "+state.ID.ValueString()+": "+err.Error())
 		return
@@ -227,7 +234,7 @@ func (r *groupResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		Description: plan.Description.String(),
 	}
 
-	result, err := r.client.Put(ctx, plan.ID.ValueString(), item)
+	result, err := r.client.Put(ctx, plan.ID.ValueString(), item, plan.Account.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating group", "Could not put group, unexpected error: "+err.Error())
 		return
@@ -240,7 +247,7 @@ func (r *groupResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
 
-	grp, err := r.client.Get(plan.ID.ValueString())
+	grp, err := r.client.Get(plan.ID.ValueString(),plan.Account.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error gettting group", "Could not get group to workout principals, unexpected error: "+err.Error())
 		return
@@ -285,7 +292,7 @@ func (r *groupResource) deleteUsersFromGroup(ctx context.Context, plan groupReso
 		}
 	}
 
-	g, err := r.client.PrincipalsDelete(ctx, plan.ID.ValueString(), neos.GroupPrincipalDeleteRequest{Principals: delList})
+	g, err := r.client.PrincipalsDelete(ctx, plan.ID.ValueString(), neos.GroupPrincipalDeleteRequest{Principals: delList}, plan.Account.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting principals", "Could not delete principals, unexpected error: "+err.Error())
 		return true
@@ -317,7 +324,7 @@ func (r *groupResource) addUsersToGroup(ctx context.Context, plan groupResourceM
 		}
 	}
 
-	gg, err := r.client.PrincipalsPost(ctx, plan.ID.ValueString(), neos.GroupPrincipalPostRequest{Principals: addList})
+	gg, err := r.client.PrincipalsPost(ctx, plan.ID.ValueString(), neos.GroupPrincipalPostRequest{Principals: addList}, plan.Account.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error posting principals", "Could not post to update principals, unexpected error: "+err.Error())
 		return true
@@ -338,7 +345,7 @@ func (r *groupResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 
-	err := r.client.Delete(ctx, plan.ID.ValueString())
+	err := r.client.Delete(ctx, plan.ID.ValueString(), plan.Account.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting group", "Could not delete group, unexpected error: "+err.Error())
 		return

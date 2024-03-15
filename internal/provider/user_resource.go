@@ -127,10 +127,10 @@ func (r *userResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 				Description: "user enabled",
 			},
 			"account": schema.StringAttribute{
-				Computed:    true,
-				Optional:    false,
+				Computed:    false,
+				Optional:    true,
 				Required:    false,
-				Description: "account",
+				Description: "account if not root",
 			},
 			"is_system": schema.BoolAttribute{
 				Computed:    true,
@@ -178,8 +178,8 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 		FirstName: plan.FirstName.String(),
 		Email:     plan.Email.String(),
 	}
-
-	result, err := r.client.Post(ctx, item)
+	
+	result, err := r.client.Post(ctx, item, plan.Account.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating user", "Could not create user, unexpected error: "+err.Error())
 		return
@@ -265,7 +265,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		Email:     plan.Email.String(),
 	}
 
-	result, err := r.client.Post(ctx, dspr)
+	result, err := r.client.Post(ctx, dspr, plan.Account.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating user", "Could not put user, unexpected error: "+err.Error())
 		return
