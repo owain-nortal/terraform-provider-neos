@@ -178,7 +178,7 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 		FirstName: plan.FirstName.String(),
 		Email:     plan.Email.String(),
 	}
-	
+
 	result, err := r.client.Post(ctx, item, plan.Account.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating user", "Could not create user, unexpected error: "+err.Error())

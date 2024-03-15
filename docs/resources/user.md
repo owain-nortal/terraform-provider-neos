@@ -23,12 +23,12 @@ description: |-
 
 ### Optional
 
+- `account` (String) account if not root
 - `email` (String) Email of the user
 - `username` (String) Username of the user
 
 ### Read-Only
 
-- `account` (String) account
 - `id` (String) The Unique ID of the user
 - `is_system` (Boolean) The owner of the user
 - `last_updated` (String)

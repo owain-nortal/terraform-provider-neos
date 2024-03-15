@@ -20,6 +20,10 @@ description: |-
 - `id` (String) The Unique ID of the policy
 - `policy_json` (String) the Policy
 
+### Optional
+
+- `account` (String) account
+
 ### Read-Only
 
 - `last_updated` (String)

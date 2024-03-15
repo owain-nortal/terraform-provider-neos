@@ -247,7 +247,7 @@ func (r *groupResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
 
-	grp, err := r.client.Get(plan.ID.ValueString(),plan.Account.ValueString())
+	grp, err := r.client.Get(plan.ID.ValueString(), plan.Account.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error gettting group", "Could not get group to workout principals, unexpected error: "+err.Error())
 		return

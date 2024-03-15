@@ -21,6 +21,7 @@ description: |-
 
 ### Optional
 
+- `account` (String) account if not root
 - `description` (String) Description of the group
 - `principals` (Set of String) list of principals
 

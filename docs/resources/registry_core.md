@@ -17,6 +17,7 @@ description: |-
 
 ### Required
 
+- `account` (String) Account if not root
 - `name` (String) Name of the core
 - `partition` (String) The name of the partition
 
