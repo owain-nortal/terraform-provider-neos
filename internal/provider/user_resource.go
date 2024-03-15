@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"encoding/json"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -217,7 +216,7 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	userList, err := r.client.List("", "", "")
+	userList, err := r.client.List("", "", state.Account.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error Reading NEOS user", "Could not read NEOS  user ID "+state.ID.ValueString()+": "+err.Error())
 		return
@@ -225,8 +224,8 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	for _, ds := range userList.Users {
 		if ds.Identifier == state.ID.ValueString() {
-			bits := strings.Split(ds.Urn, ":")
-			account := bits[4]
+			//bits := strings.Split(ds.Urn, ":")
+			//account := bits[4]
 			state.ID = types.StringValue(ds.Identifier)
 			state.FirstName = types.StringValue(ds.FirstName)
 			state.LastName = types.StringValue(ds.LastName)
@@ -235,7 +234,7 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 			state.Enabled = types.BoolValue(ds.Enabled)
 			state.IsSystem = types.BoolValue(ds.IsSystem)
 			state.URN = types.StringValue(ds.Urn)
-			state.Account = types.StringValue(account)
+			state.Account = types.StringValue(state.Account.ValueString())
 			break
 		}
 	}
