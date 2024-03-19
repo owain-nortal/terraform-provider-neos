@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -29,14 +30,17 @@ func (d *registryCoreDataSource) Metadata(_ context.Context, req datasource.Meta
 }
 
 func (d *registryCoreDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	mod := RegistryCoreDataSourceModel{}
+	req.Config.Get(ctx, &mod)
 
 	var state RegistryCoreDataSourceModel
 
-	state.RegistryCores = append(state.RegistryCores, RegistryCoreModel{})
+	//state.RegistryCores = append(state.RegistryCores, RegistryCoreModel{})
+	state.RegistryCores = []RegistryCoreModel{}
 
-	state.RegistryCores[0].ID = types.StringValue("00000000-0000-0000-0000-000000000000")
+	//state.RegistryCores[0].ID = types.StringValue("00000000-0000-0000-0000-000000000000")
 
-	list, err := d.client.Get("root")
+	list, err := d.client.Get(mod.Account.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to read registry core List",
@@ -47,14 +51,18 @@ func (d *registryCoreDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	// Map response body to model
 	for _, ds := range list.Cores {
+		id := d.splitUrnGetId(ds.Urn)
 		registryCoreState := RegistryCoreModel{
-			ID:   types.StringValue(ds.ID),
-			Host: types.StringValue(ds.Host),
-			Name: types.StringValue(ds.Name),
-			Urn:  types.StringValue(ds.Urn),
+			ID:      types.StringValue(id),
+			Host:    types.StringValue(ds.Host),
+			Name:    types.StringValue(ds.Name),
+			Urn:     types.StringValue(ds.Urn),
+			Account: types.StringValue(ds.Account),
 		}
 		tflog.Info(ctx, fmt.Sprintf("NEOS - ID: %s ", ds.Urn))
-		state.RegistryCores = append(state.RegistryCores, registryCoreState)
+		if (mod.Name.ValueString() == ds.Name) || mod.Name.IsNull() {
+			state.RegistryCores = append(state.RegistryCores, registryCoreState)
+		}
 	}
 
 	// Set state
@@ -63,6 +71,17 @@ func (d *registryCoreDataSource) Read(ctx context.Context, req datasource.ReadRe
 	if resp.Diagnostics.HasError() {
 		return
 	}
+}
+
+func (d registryCoreDataSource) ValidateConfig(ctx context.Context, req datasource.ValidateConfigRequest, resp *datasource.ValidateConfigResponse) {
+	var data RegistryCoreDataSourceModel
+
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 }
 
 // Configure adds the provider configured client to the data source.
@@ -85,9 +104,16 @@ func (d *registryCoreDataSource) Configure(ctx context.Context, req datasource.C
 	d.client = &client.RegistryCoreClient
 }
 
-func (d *registryCoreDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *registryCoreDataSource) Schema(_ context.Context, foo datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"account": schema.StringAttribute{
+				Required: true,
+			},
+			"name": schema.StringAttribute{
+				Optional: true,
+			},
 			"registry_cores": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
@@ -104,6 +130,9 @@ func (d *registryCoreDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 						"id": schema.StringAttribute{
 							Computed: true,
 						},
+						"account": schema.StringAttribute{
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -113,11 +142,19 @@ func (d *registryCoreDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 
 type RegistryCoreDataSourceModel struct {
 	RegistryCores []RegistryCoreModel `tfsdk:"registry_cores"`
+	Account       types.String        `tfsdk:"account"`
+	Name          types.String        `tfsdk:"name"`
 }
 
 type RegistryCoreModel struct {
-	ID   types.String `tfsdk:"id"`
-	Host types.String `tfsdk:"host"`
-	Urn  types.String `tfsdk:"urn"`
-	Name types.String `tfsdk:"name"`
+	ID      types.String `tfsdk:"id"`
+	Host    types.String `tfsdk:"host"`
+	Urn     types.String `tfsdk:"urn"`
+	Name    types.String `tfsdk:"name"`
+	Account types.String `tfsdk:"account"`
+}
+
+func (d *registryCoreDataSource) splitUrnGetId(urn string) string {
+	bits := strings.Split(urn, ":")
+	return bits[len(bits)-1]
 }
