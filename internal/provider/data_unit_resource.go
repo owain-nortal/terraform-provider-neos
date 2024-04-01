@@ -378,12 +378,13 @@ func (r *dataUnitResource) Create(ctx context.Context, req resource.CreateReques
 	plan.Label = types.StringValue(result.Label)
 	plan.CreatedAt = types.StringValue(result.CreatedAt.String())
 	configJson := plan.ConfigJson.ValueString()
-	_, err = r.client.ConfigPut(ctx, result.Identifier, configJson)
-	if err != nil {
-		resp.Diagnostics.AddError("Error updating data unit config ", "Could not create data unit config, unexpected error: "+err.Error())
-		return
+	if configJson != "" {
+		_, err = r.client.ConfigPut(ctx, result.Identifier, configJson)
+		if err != nil {
+			resp.Diagnostics.AddError("Error updating data unit config ", "Could not create data unit config, unexpected error: "+err.Error())
+			return
+		}
 	}
-
 	plan.ConfigJson = types.StringValue(configJson)
 	//tflog.Info(ctx, fmt.Sprintf("%s", dd.Configuration))
 
