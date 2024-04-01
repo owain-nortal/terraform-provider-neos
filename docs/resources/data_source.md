@@ -17,17 +17,17 @@ description: |-
 
 ### Required
 
-- `connection_json` (String) connection json
 - `contact_ids` (List of String) list of contacts Ids
 - `links` (List of String) list of links
 - `name` (String) Name of the data system
-- `secret_json` (String) secret json
 
 ### Optional
 
+- `connection_json` (String) connection json
 - `description` (String) Description of the data system
 - `label` (String) Label for the data system
 - `owner` (String) The owner of the data system
+- `secret_json` (String) secret json
 
 ### Read-Only
 
