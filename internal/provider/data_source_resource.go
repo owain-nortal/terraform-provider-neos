@@ -103,8 +103,8 @@ func (r *dataSourceResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			},
 			"connection_json": schema.StringAttribute{
 				Computed:    false,
-				Optional:    false,
-				Required:    true,
+				Optional:    true,
+				Required:    false,
 				Description: "connection json",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -112,8 +112,8 @@ func (r *dataSourceResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			},
 			"secret_json": schema.StringAttribute{
 				Computed:    false,
-				Optional:    false,
-				Required:    true,
+				Optional:    true,
+				Required:    false,
 				Description: "secret json",
 			},
 			"contact_ids": schema.ListAttribute{
