@@ -49,19 +49,19 @@ Optional:
 
 Required:
 
-- `name` (String) Name of the schema field
-- `optional` (Boolean) set the schmea field to be a optional
-- `primary` (Boolean) set the schmea field to be a primary key
+- `description` (String) Description of the schema field
 
 Optional:
 
 - `data_type` (Attributes) set the schmea field data type (see [below for nested schema](#nestedatt--schema--fields--data_type))
-- `description` (String) Description of the schema field
+- `name` (String) Name of the schema field
+- `optional` (Boolean) set the schmea field to be a optional
+- `primary` (Boolean) set the schmea field to be a primary key
 
 <a id="nestedatt--schema--fields--data_type"></a>
 ### Nested Schema for `schema.fields.data_type`
 
-Required:
+Optional:
 
 - `column_type` (String) set the schmea field column type
 - `meta` (Map of String)

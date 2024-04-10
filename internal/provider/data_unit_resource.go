@@ -2,11 +2,8 @@ package provider
 
 import (
 	"context"
-	"fmt"
-
 	"encoding/json"
-	"time"
-
+	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -15,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	neos "github.com/owain-nortal/neos-client-go"
+	"time"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -332,9 +330,11 @@ func (r *dataUnitResource) Create(ctx context.Context, req resource.CreateReques
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var links []string
-	for _, v := range linkList.Elements() {
-		links = append(links, v.String())
+	var links = make([]string, 0)
+	diag = linkList.ElementsAs(ctx, &links, false)
+	resp.Diagnostics.Append(diag...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	contactIDs, diag := plan.ContactIds.ToListValue(ctx)
@@ -342,19 +342,21 @@ func (r *dataUnitResource) Create(ctx context.Context, req resource.CreateReques
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var contacts []string
-	for _, v := range contactIDs.Elements() {
-		contacts = append(contacts, v.String())
+	var contacts = make([]string, 0)
+	diag = contactIDs.ElementsAs(ctx, &contacts, false)
+	resp.Diagnostics.Append(diag...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	item := neos.DataUnitPostRequest{
 		Entity: neos.DataUnitPostRequestEntity{
-			Name:        plan.Name.String(),
-			Label:       plan.Label.String(),
-			Description: plan.Description.String(),
+			Name:        plan.Name.ValueString(),
+			Label:       plan.Label.ValueString(),
+			Description: plan.Description.ValueString(),
 		},
 		EntityInfo: neos.DataUnitPostRequestEntityInfo{
-			Owner:      plan.Owner.String(),
+			Owner:      plan.Owner.ValueString(),
 			ContactIds: contacts,
 			Links:      links,
 		},
@@ -598,22 +600,16 @@ func (r *dataUnitResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	//tflog.Info(ctx, "££ Update After Create Get plan")
-	// i, e := plan.ID.ToStringValue(ctx)
-	// if e.HasError() {
-	// 	tflog.Info(ctx, "Data system update plan get has error")
-	// 	return
-	// }
-
 	linkList, diag := plan.Links.ToListValue(ctx)
 	resp.Diagnostics.Append(diag...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	var links []string
-	for _, v := range linkList.Elements() {
-		links = append(links, v.String())
+	var links = make([]string, 0)
+	diag = linkList.ElementsAs(ctx, &links, false)
+	resp.Diagnostics.Append(diag...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	contactIDs, diag := plan.ContactIds.ToListValue(ctx)
@@ -621,23 +617,24 @@ func (r *dataUnitResource) Update(ctx context.Context, req resource.UpdateReques
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var contacts []string
-	for _, v := range contactIDs.Elements() {
-		contacts = append(contacts, v.String())
+	var contacts = make([]string, 0)
+	diag = contactIDs.ElementsAs(ctx, &contacts, false)
+	resp.Diagnostics.Append(diag...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
-
 	//tflog.Info(ctx, "££££ update After the ranges")
 
 	item := neos.DataUnitPutRequest{
 		Entity: neos.DataUnitPutRequestEntity{
-			Name:        plan.Name.String(),
-			Label:       plan.Label.String(),
-			Description: plan.Description.String(),
+			Name:        plan.Name.ValueString(),
+			Label:       plan.Label.ValueString(),
+			Description: plan.Description.ValueString(),
 		},
 	}
 
 	eItem := neos.DataUnitPutRequestEntityInfo{
-		Owner:      plan.Owner.String(),
+		Owner:      plan.Owner.ValueString(),
 		ContactIds: contacts,
 		Links:      links,
 	}

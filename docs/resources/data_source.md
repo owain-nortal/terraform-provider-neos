@@ -27,7 +27,7 @@ description: |-
 - `description` (String) Description of the data system
 - `label` (String) Label for the data system
 - `owner` (String) The owner of the data system
-- `secret_json` (String) secret json
+- `secret_values` (Map of String, Sensitive) secrets mapping key value pairs
 
 ### Read-Only
 

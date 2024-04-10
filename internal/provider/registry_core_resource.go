@@ -141,8 +141,8 @@ func (r *registryCoreResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	item := neos.RegistryCorePostRequest{
-		Name:      plan.Name.String(),
-		Partition: plan.Partition.String(),
+		Name:      plan.Name.ValueString(),
+		Partition: plan.Partition.ValueString(),
 	}
 
 	result, err := r.client.Post(ctx, item, plan.Account.ValueString())

@@ -155,7 +155,7 @@ func (r *linkDataUnitDataProductResource) Update(ctx context.Context, req resour
 		return
 	}
 
-	result, err := r.client.LinkDataUnitToDataProduct(ctx, plan.ParentIdentifier.ValueString(), plan.ChildIdentifier.String())
+	result, err := r.client.LinkDataUnitToDataProduct(ctx, plan.ParentIdentifier.ValueString(), plan.ChildIdentifier.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating link",

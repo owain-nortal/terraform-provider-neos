@@ -3,6 +3,8 @@ package provider
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -15,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	neos "github.com/owain-nortal/neos-client-go"
 	"golang.org/x/exp/slices"
-	"time"
 )
 
 // New groupResource is a helper function to simplify the provider implementation.
@@ -130,8 +131,8 @@ func (r *groupResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	item := neos.GroupPostRequest{
-		Name:        plan.Name.String(),
-		Description: plan.Description.String(),
+		Name:        plan.Name.ValueString(),
+		Description: plan.Description.ValueString(),
 	}
 
 	result, err := r.client.Post(ctx, item, plan.Account.ValueString())
@@ -230,8 +231,8 @@ func (r *groupResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 
 	item := neos.GroupPutRequest{
-		Name:        plan.Name.String(),
-		Description: plan.Description.String(),
+		Name:        plan.Name.ValueString(),
+		Description: plan.Description.ValueString(),
 	}
 
 	result, err := r.client.Put(ctx, plan.ID.ValueString(), item, plan.Account.ValueString())

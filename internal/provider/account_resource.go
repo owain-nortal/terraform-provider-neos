@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -12,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	neos "github.com/owain-nortal/neos-client-go"
-	"time"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -127,10 +128,10 @@ func (r *accountResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	item := neos.AccountPostRequest{
-		Name:        plan.Name.String(),
+		Name:        plan.Name.ValueString(),
 		DisplayName: plan.DisplayName.String(),
-		Description: plan.Description.String(),
-		Owner:       plan.Owner.String(),
+		Description: plan.Description.ValueString(),
+		Owner:       plan.Owner.ValueString(),
 	}
 
 	result, err := r.client.Post(ctx, item)
@@ -208,8 +209,8 @@ func (r *accountResource) Update(ctx context.Context, req resource.UpdateRequest
 
 	item := neos.AccountPutRequest{
 		DisplayName: plan.DisplayName.String(),
-		Owner:       plan.Owner.String(),
-		Description: plan.Description.String(),
+		Owner:       plan.Owner.ValueString(),
+		Description: plan.Description.ValueString(),
 	}
 
 	result, err := r.client.Put(ctx, plan.ID.ValueString(), item)
