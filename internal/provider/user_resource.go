@@ -172,10 +172,10 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	//tflog.Info(ctx, "££ After Create Get plan")
 
 	item := neos.UserPostRequest{
-		Username:  plan.Username.String(),
-		LastName:  plan.LastName.String(),
-		FirstName: plan.FirstName.String(),
-		Email:     plan.Email.String(),
+		Username:  plan.Username.ValueString(),
+		LastName:  plan.LastName.ValueString(),
+		FirstName: plan.FirstName.ValueString(),
+		Email:     plan.Email.ValueString(),
 	}
 
 	result, err := r.client.Post(ctx, item, plan.Account.ValueString())
@@ -258,10 +258,10 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	dspr := neos.UserPostRequest{
-		Username:  plan.Username.String(),
-		LastName:  plan.LastName.String(),
-		FirstName: plan.FirstName.String(),
-		Email:     plan.Email.String(),
+		Username:  plan.Username.ValueString(),
+		LastName:  plan.LastName.ValueString(),
+		FirstName: plan.FirstName.ValueString(),
+		Email:     plan.Email.ValueString(),
 	}
 
 	result, err := r.client.Post(ctx, dspr, plan.Account.ValueString())

@@ -3,10 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-
-	"encoding/json"
-	"time"
-
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -15,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	neos "github.com/owain-nortal/neos-client-go"
+	"time"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -110,12 +107,22 @@ func (r *dataSourceResource) Schema(_ context.Context, _ resource.SchemaRequest,
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"secret_json": schema.StringAttribute{
+			// "secret_json": schema.StringAttribute{
+			// 	Computed:    false,
+			// 	Optional:    true,
+			// 	Required:    false,
+			// 	Description: "secret json",
+			// },
+
+			"secret_values": schema.MapAttribute{
+				ElementType: types.StringType,
 				Computed:    false,
 				Optional:    true,
 				Required:    false,
-				Description: "secret json",
+				Sensitive:   true,
+				Description: "secrets mapping key value pairs",
 			},
+
 			"contact_ids": schema.ListAttribute{
 				ElementType: types.StringType,
 				Computed:    false,
@@ -147,10 +154,11 @@ type dataSourceResourceModel struct {
 	Owner          types.String `tfsdk:"owner"`
 	CreatedAt      types.String `tfsdk:"created_at"`
 	ConnectionJson types.String `tfsdk:"connection_json"`
-	SecretJson     types.String `tfsdk:"secret_json"`
-	Links          types.List   `tfsdk:"links"`
-	ContactIds     types.List   `tfsdk:"contact_ids"`
-	LastUpdated    types.String `tfsdk:"last_updated"`
+	//SecretJson     types.String `tfsdk:"secret_json"`
+	SecretValues types.Map    `tfsdk:"secret_values"`
+	Links        types.List   `tfsdk:"links"`
+	ContactIds   types.List   `tfsdk:"contact_ids"`
+	LastUpdated  types.String `tfsdk:"last_updated"`
 }
 
 // Create a new resource.
@@ -171,9 +179,11 @@ func (r *dataSourceResource) Create(ctx context.Context, req resource.CreateRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var links []string
-	for _, v := range linkList.Elements() {
-		links = append(links, v.String())
+	var links = make([]string, 0)
+	diag = linkList.ElementsAs(ctx, &links, false)
+	resp.Diagnostics.Append(diag...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	contactIDs, diag := plan.ContactIds.ToListValue(ctx)
@@ -181,19 +191,21 @@ func (r *dataSourceResource) Create(ctx context.Context, req resource.CreateRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var contacts []string
-	for _, v := range contactIDs.Elements() {
-		contacts = append(contacts, v.String())
+	var contacts = make([]string, 0)
+	diag = contactIDs.ElementsAs(ctx, &contacts, false)
+	resp.Diagnostics.Append(diag...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	item := neos.DataSourcePostRequest{
 		Entity: neos.DataSourcePostRequestEntity{
-			Name:        plan.Name.String(),
-			Label:       plan.Label.String(),
-			Description: plan.Description.String(),
+			Name:        plan.Name.ValueString(),
+			Label:       plan.Label.ValueString(),
+			Description: plan.Description.ValueString(),
 		},
 		EntityInfo: neos.DataSourcePostRequestEntityInfo{
-			Owner:      plan.Owner.String(),
+			Owner:      plan.Owner.ValueString(),
 			ContactIds: contacts,
 			Links:      links,
 		},
@@ -222,29 +234,45 @@ func (r *dataSourceResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	connectionResult, err := r.connectionClient.Put(ctx, result.Identifier, plan.ConnectionJson.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError("Error creating data source connection", "Could not create data source connection, unexpected error: "+err.Error())
+	if plan.ConnectionJson.ValueString() != "" {
+		connectionResult, err := r.connectionClient.Put(ctx, result.Identifier, plan.ConnectionJson.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError("Error creating data source connection", "Could not create data source connection, unexpected error: "+err.Error())
+			return
+		}
+
+		tflog.Info(ctx, fmt.Sprintf("Connection result %s %s", result.Identifier, connectionResult))
+	}
+
+	secretMap := make(map[string]string)
+	diags = plan.SecretValues.ElementsAs(ctx, &secretMap, false)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	tflog.Info(ctx, fmt.Sprintf("Connection result %s %s", result.Identifier, connectionResult))
+	if len(secretMap) > 0 {
+		secretResult, err := r.dataSourceSecretClient.Post(ctx, result.Identifier, secretMap)
+		if err != nil {
+			resp.Diagnostics.AddError("Error creating data source secret", "Could not create data source secret, unexpected error: "+err.Error())
+			return
+		}
+		tflog.Info(ctx, fmt.Sprintf("Connection result %s %s", result.Identifier, secretResult))
 
-	var secretMap map[string]string
-	secretBytes := []byte(plan.SecretJson.ValueString())
-	if err := json.Unmarshal(secretBytes, &secretMap); err != nil {
-		resp.Diagnostics.AddError("Error unmarshal connection secret", " unexpected error: "+err.Error())
-		return
 	}
+	//vv.ValueFromMap(ctx,basetypes.)
 
-	secretResult, err := r.dataSourceSecretClient.Post(ctx, result.Identifier, secretMap)
-	if err != nil {
-		resp.Diagnostics.AddError("Error creating data source secret", "Could not create data source secret, unexpected error: "+err.Error())
-		return
-	}
+	// if plan.SecretJson.ValueString() != "" {
 
-	tflog.Info(ctx, fmt.Sprintf("Connection result %s %s", result.Identifier, secretResult))
+	// 	var secretMap map[string]string
+	// 	secretBytes := []byte(plan.SecretJson.ValueString())
+	// 	if err := json.Unmarshal(secretBytes, &secretMap); err != nil {
+	// 		resp.Diagnostics.AddError("Error unmarshal connection secret", " unexpected error: "+err.Error())
+	// 		return
+	// 	}
 
+	//
+	// }
 }
 
 // Read refreshes the Terraform state with the latest data.
@@ -321,10 +349,11 @@ func (r *dataSourceResource) Update(ctx context.Context, req resource.UpdateRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	var links []string
-	for _, v := range linkList.Elements() {
-		links = append(links, v.String())
+	var links = make([]string, 0)
+	diag = linkList.ElementsAs(ctx, &links, false)
+	resp.Diagnostics.Append(diag...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	contactIDs, diag := plan.ContactIds.ToListValue(ctx)
@@ -332,23 +361,25 @@ func (r *dataSourceResource) Update(ctx context.Context, req resource.UpdateRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var contacts []string
-	for _, v := range contactIDs.Elements() {
-		contacts = append(contacts, v.String())
+	var contacts = make([]string, 0)
+	diag = contactIDs.ElementsAs(ctx, &contacts, false)
+	resp.Diagnostics.Append(diag...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	//tflog.Info(ctx, "££££ update After the ranges")
 
 	item := neos.DataSourcePutRequest{
 		Entity: neos.DataSourcePutRequestEntity{
-			Name:        plan.Name.String(),
-			Label:       plan.Label.String(),
-			Description: plan.Description.String(),
+			Name:        plan.Name.ValueString(),
+			Label:       plan.Label.ValueString(),
+			Description: plan.Description.ValueString(),
 		},
 	}
 
 	eItem := neos.DataSourcePutRequestEntityInfo{
-		Owner:      plan.Owner.String(),
+		Owner:      plan.Owner.ValueString(),
 		ContactIds: contacts,
 		Links:      links,
 	}
@@ -372,45 +403,54 @@ func (r *dataSourceResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	connectionResult, err := r.connectionClient.Put(ctx, result.Identifier, plan.ConnectionJson.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError("Error creating data source connection", "Could not create data source connection, unexpected error: "+err.Error())
-		return
-	}
+	if plan.ConnectionJson.ValueString() != "" {
 
-	//need to get the secret id from the connection?
-	ds, err := r.client.GetById(plan.ID.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError("Error GetById client", " unexpected error: "+err.Error())
-		return
-	}
-	tflog.Info(ctx, fmt.Sprintf("Connection result %s %s", result.Identifier, connectionResult))
+		// if there is connectionJson only then will we update it and secrets, if there is no connection json we will
+		// not do anything with secrets, not sure if this logic is sound?
 
-	var secretMap map[string]string
-	secretBytes := []byte(plan.SecretJson.ValueString())
-	if err := json.Unmarshal(secretBytes, &secretMap); err != nil {
-		resp.Diagnostics.AddError("Error unmarshal connection secret", " unexpected error: "+err.Error())
-		return
-	}
+		connectionResult, err := r.connectionClient.Put(ctx, result.Identifier, plan.ConnectionJson.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError("Error creating data source connection", "Could not create data source connection, unexpected error: "+err.Error())
+			return
+		}
 
-	secret, err := r.secretClient.GetById(ds.SecretIdentifier)
-	if err != nil {
-		resp.Diagnostics.AddError("Error GetById secret", " unexpected error: "+err.Error())
-		return
-	}
-	spr := neos.SecretPutRequest{
-		Name: secret.Name,
-		Data: secretMap,
-	}
+		_, err = r.client.GetById(plan.ID.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError("Error GetById client", " unexpected error: "+err.Error())
+			return
+		}
+		tflog.Info(ctx, fmt.Sprintf("Connection result %s %s", result.Identifier, connectionResult))
 
-	secretResult, err := r.secretClient.Put(ctx, ds.SecretIdentifier, spr)
-	if err != nil {
-		resp.Diagnostics.AddError("Error creating data source secret", "Could not create data source secret, unexpected error: "+err.Error())
-		return
+		//var secretMap map[string]string
+
+		// secretJson := plan.SecretJson.ValueString()
+		// if secretJson != "" {
+		// 	secretBytes := []byte(secretJson)
+		// 	if err := json.Unmarshal(secretBytes, &secretMap); err != nil {
+		// 		resp.Diagnostics.AddError("Error unmarshal connection secret", " unexpected error: "+err.Error())
+		// 		return
+		// 	}
+
+		// 	secret, err := r.secretClient.GetById(ds.SecretIdentifier)
+		// 	if err != nil {
+		// 		resp.Diagnostics.AddError("Error GetById secret", " unexpected error: "+err.Error())
+		// 		return
+		// 	}
+		// 	spr := neos.SecretPutRequest{
+		// 		Name: secret.Name,
+		// 		Data: secretMap,
+		// 	}
+
+		// 	secretResult, err := r.secretClient.Put(ctx, ds.SecretIdentifier, spr)
+		// 	if err != nil {
+		// 		resp.Diagnostics.AddError("Error creating data source secret", "Could not create data source secret, unexpected error: "+err.Error())
+		// 		return
+		// 	}
+
+		// 	tflog.Info(ctx, fmt.Sprintf("Secret put result %s %s", result.Identifier, secretResult.Identifier))
+		// }
+		//plan.ConnectionJson = types.StringValue(connectionResult)
 	}
-
-	tflog.Info(ctx, fmt.Sprintf("Secret put result %s %s", result.Identifier, secretResult.Identifier))
-
 	contactsList, _ := types.ListValueFrom(ctx, types.StringType, infoResult.ContactIds)
 	linksList, _ := types.ListValueFrom(ctx, types.StringType, infoResult.Links)
 
@@ -424,7 +464,7 @@ func (r *dataSourceResource) Update(ctx context.Context, req resource.UpdateRequ
 	plan.ContactIds = contactsList
 	plan.Links = linksList
 	plan.Owner = types.StringValue(infoResult.Owner)
-	plan.ConnectionJson = types.StringValue(connectionResult)
+
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

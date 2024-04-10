@@ -157,9 +157,11 @@ func (r *outputResource) Create(ctx context.Context, req resource.CreateRequest,
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var links []string
-	for _, v := range linkList.Elements() {
-		links = append(links, v.String())
+	var links = make([]string, 0)
+	diag = linkList.ElementsAs(ctx, &links, false)
+	resp.Diagnostics.Append(diag...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	contactIDs, diag := plan.ContactIds.ToListValue(ctx)
@@ -167,20 +169,22 @@ func (r *outputResource) Create(ctx context.Context, req resource.CreateRequest,
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var contacts []string
-	for _, v := range contactIDs.Elements() {
-		contacts = append(contacts, v.String())
+	var contacts = make([]string, 0)
+	diag = contactIDs.ElementsAs(ctx, &contacts, false)
+	resp.Diagnostics.Append(diag...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	item := neos.OutputPostRequest{
 		Entity: neos.OutputPostRequestEntity{
-			Name:        plan.Name.String(),
-			Label:       plan.Label.String(),
-			Description: plan.Description.String(),
-			OutputType:  plan.OutputType.String(),
+			Name:        plan.Name.ValueString(),
+			Label:       plan.Label.ValueString(),
+			Description: plan.Description.ValueString(),
+			OutputType:  plan.OutputType.ValueString(),
 		},
 		EntityInfo: neos.OutputPostRequestEntityInfo{
-			Owner:      plan.Owner.String(),
+			Owner:      plan.Owner.ValueString(),
 			ContactIds: contacts,
 			Links:      links,
 		},
@@ -296,10 +300,11 @@ func (r *outputResource) Update(ctx context.Context, req resource.UpdateRequest,
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	var links []string
-	for _, v := range linkList.Elements() {
-		links = append(links, v.String())
+	var links = make([]string, 0)
+	diag = linkList.ElementsAs(ctx, &links, false)
+	resp.Diagnostics.Append(diag...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	contactIDs, diag := plan.ContactIds.ToListValue(ctx)
@@ -307,24 +312,26 @@ func (r *outputResource) Update(ctx context.Context, req resource.UpdateRequest,
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var contacts []string
-	for _, v := range contactIDs.Elements() {
-		contacts = append(contacts, v.String())
+	var contacts = make([]string, 0)
+	diag = contactIDs.ElementsAs(ctx, &contacts, false)
+	resp.Diagnostics.Append(diag...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	//tflog.Info(ctx, "££££ update After the ranges")
 
 	item := neos.OutputPutRequest{
 		Entity: neos.OutputPutRequestEntity{
-			Name:        plan.Name.String(),
-			Label:       plan.Label.String(),
-			Description: plan.Description.String(),
+			Name:        plan.Name.ValueString(),
+			Label:       plan.Label.ValueString(),
+			Description: plan.Description.ValueString(),
 			OutputType:  plan.OutputType.String(),
 		},
 	}
 
 	eItem := neos.OutputPutRequestEntityInfo{
-		Owner:      plan.Owner.String(),
+		Owner:      plan.Owner.ValueString(),
 		ContactIds: contacts,
 		Links:      links,
 	}

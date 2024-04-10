@@ -148,9 +148,11 @@ func (r *dataSystemResource) Create(ctx context.Context, req resource.CreateRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var links []string
-	for _, v := range linkList.Elements() {
-		links = append(links, v.String())
+	var links = make([]string, 0)
+	diag = linkList.ElementsAs(ctx, &links, false)
+	resp.Diagnostics.Append(diag...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	contactIDs, diag := plan.ContactIds.ToListValue(ctx)
@@ -158,19 +160,21 @@ func (r *dataSystemResource) Create(ctx context.Context, req resource.CreateRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var contacts []string
-	for _, v := range contactIDs.Elements() {
-		contacts = append(contacts, v.String())
+	var contacts = make([]string, 0)
+	diag = contactIDs.ElementsAs(ctx, &contacts, false)
+	resp.Diagnostics.Append(diag...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	item := neos.DataSystemPostRequest{
 		Entity: neos.DataSystemPostRequestEntity{
-			Name:        plan.Name.String(),
-			Label:       plan.Label.String(),
-			Description: plan.Description.String(),
+			Name:        plan.Name.ValueString(),
+			Label:       plan.Label.ValueString(),
+			Description: plan.Description.ValueString(),
 		},
 		EntityInfo: neos.DataSystemPostRequestEntityInfo{
-			Owner:      plan.Owner.String(),
+			Owner:      plan.Owner.ValueString(),
 			ContactIds: contacts,
 			Links:      links,
 		},
@@ -255,10 +259,11 @@ func (r *dataSystemResource) Update(ctx context.Context, req resource.UpdateRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	var links []string
-	for _, v := range linkList.Elements() {
-		links = append(links, v.String())
+	var links = make([]string, 0)
+	diag = linkList.ElementsAs(ctx, &links, false)
+	resp.Diagnostics.Append(diag...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	contactIDs, diag := plan.ContactIds.ToListValue(ctx)
@@ -266,21 +271,23 @@ func (r *dataSystemResource) Update(ctx context.Context, req resource.UpdateRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var contacts []string
-	for _, v := range contactIDs.Elements() {
-		contacts = append(contacts, v.String())
+	var contacts = make([]string, 0)
+	diag = contactIDs.ElementsAs(ctx, &contacts, false)
+	resp.Diagnostics.Append(diag...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	item := neos.DataSystemPutRequest{
 		Entity: neos.DataSystemPutRequestEntity{
-			Name:        plan.Name.String(),
-			Label:       plan.Label.String(),
-			Description: plan.Description.String(),
+			Name:        plan.Name.ValueString(),
+			Label:       plan.Label.ValueString(),
+			Description: plan.Description.ValueString(),
 		},
 	}
 
 	eItem := neos.DataSystemPutRequestEntityInfo{
-		Owner:      plan.Owner.String(),
+		Owner:      plan.Owner.ValueString(),
 		ContactIds: contacts,
 		Links:      links,
 	}

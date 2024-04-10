@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -12,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	neos "github.com/owain-nortal/neos-client-go"
-	"time"
 )
 
 // New data unitResource is a helper function to simplify the provider implementation.
@@ -122,7 +123,7 @@ func (r *secretResource) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	item := neos.SecretPostRequest{
-		Name: plan.Name.String(),
+		Name: plan.Name.ValueString(),
 		Data: data,
 	}
 
@@ -218,7 +219,7 @@ func (r *secretResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	item := neos.SecretPutRequest{
-		Name: plan.Name.String(),
+		Name: plan.Name.ValueString(),
 		Data: data,
 	}
 
