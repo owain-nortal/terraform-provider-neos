@@ -302,14 +302,14 @@ func (p *neosProvider) Configure(ctx context.Context, req provider.ConfigureRequ
 // DataSources defines the data sources implemented in the provider.
 func (p *neosProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
+		NewAccountDataSource,
 		NewDataSystemDataSource,
 		NewDataProductDataSource,
-		NewRegistryCoreDataSource,
 		NewDataSourceDataSource,
 		NewDataUnitDataSource,
-		NewLinksDataSource,
-		NewAccountDataSource,
 		NewGroupDataSource,
+		NewLinksDataSource,
+		NewRegistryCoreDataSource,
 		NewUserDataSource,
 		NewUserPolicyDataSource,
 	}
@@ -317,20 +317,21 @@ func (p *neosProvider) DataSources(_ context.Context) []func() datasource.DataSo
 
 func (p *neosProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		NewDataSystemResource,
+		NewAccountResource,
 		NewDataProductResource,
-		NewRegistryCoreResource,
+		NewDataProductBuilderResource,
 		NewDataSourceResource,
+		NewDataSystemResource,
 		NewDataUnitResource,
+		NewGroupResource,
 		NewLinkDataSourceDataUnitResource,
 		NewLinkDataSystemDataSourceResource,
 		NewLinkDataUnitDataProductResource,
-		NewOutputResource,
 		NewLinkDataProductOutputResource,
 		NewLinkDataProductDataProductResource,
+		NewOutputResource,
+		NewRegistryCoreResource,
 		NewSecretResource,
-		NewAccountResource,
-		NewGroupResource,
 		NewUserResource,
 		NewUserPolicyResource,
 	}

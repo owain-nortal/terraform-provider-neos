@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -88,15 +87,6 @@ func (r *dataProductResource) Schema(_ context.Context, _ resource.SchemaRequest
 				Optional:    false,
 				Required:    false,
 				Description: "when the data product was created",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"builder_json": schema.StringAttribute{
-				Computed:    false,
-				Optional:    true,
-				Required:    false,
-				Description: "builder json",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -201,7 +191,6 @@ type dataProductResourceModel struct {
 	Links       types.List             `tfsdk:"links"`
 	ContactIds  types.List             `tfsdk:"contact_ids"`
 	LastUpdated types.String           `tfsdk:"last_updated"`
-	BuilderJson types.String           `tfsdk:"builder_json"`
 	Schema      DataProductSchemaModel `tfsdk:"schema"`
 }
 
@@ -257,6 +246,10 @@ func (r *dataProductResource) Create(ctx context.Context, req resource.CreateReq
 	resp.Diagnostics.Append(diag...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	if plan.Name.ValueString() == "retentiondataproduct" {
+		fmt.Println("retentiondataproduct")
 	}
 
 	item := neos.DataProductPostRequest{
@@ -358,29 +351,6 @@ func (r *dataProductResource) Create(ctx context.Context, req resource.CreateReq
 			ProductType: types.StringValue(schemaPutRequest.Details.ProductType),
 			Fields:      pfields,
 		}
-	}
-	builderJson := plan.BuilderJson.ValueString()
-
-	// d1 := []byte(builderJson)
-	// os.WriteFile(fmt.Sprintf("/tmp/%s.json", plan.Name.ValueString()), d1, 0644)
-
-	tflog.Debug(ctx, builderJson)
-
-	if builderJson != "" {
-		if json.Valid([]byte(builderJson)) {
-			tflog.Info(ctx, fmt.Sprintf("dataProductResource Create builder put %s", id))
-			_, err = r.client.DataProductBuilderPut(ctx, id, builderJson)
-			if err != nil {
-				resp.Diagnostics.AddError("Error putting data product builder ", "Could not create data product builder, unexpected error: "+err.Error())
-				return
-			}
-			plan.BuilderJson = types.StringValue(builderJson)
-		} else {
-			resp.Diagnostics.AddError("Error invalid json data product builder ", "the builder json is invalid")
-			return
-		}
-	} else {
-		tflog.Info(ctx, "dataProductResource no builder json found ")
 	}
 
 	plan.ID = types.StringValue(id)
@@ -604,8 +574,6 @@ func (r *dataProductResource) Update(ctx context.Context, req resource.UpdateReq
 			Primary:     v.Primary.ValueBool(),
 			Optional:    v.Optional.ValueBool(),
 			DataType:    dataType,
-			//Type:        v.Type.ValueString(),
-			// Tags:        tags,
 		}
 		fields = append(fields, f)
 	}
@@ -617,52 +585,54 @@ func (r *dataProductResource) Update(ctx context.Context, req resource.UpdateReq
 		},
 	}
 
-	tflog.Info(ctx, fmt.Sprintf("dataProductResource update schema put %s", id))
-	schemaResult, err := r.schemaClient.Put(ctx, id, schemaPutRequest)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error putting data product schema ",
-			"Could not update data product schema, unexpected error: "+err.Error(),
-		)
-		return
-	}
+	if plan.Schema.ProductType.ValueString() != "" && len(fields) != 0 {
 
-	pfields := []DataProductFieldResourceModel{}
-
-	for _, v := range schemaResult.Fields {
-		tflog.Info(ctx, fmt.Sprintf("dataProductResource ColumnType values [%s] ", types.StringValue(v.DataType.ColumnType)))
-		meta, diag := types.MapValueFrom(ctx, types.StringType, v.DataType.Meta)
-		resp.Diagnostics.Append(diag...)
-		if resp.Diagnostics.HasError() {
+		tflog.Info(ctx, fmt.Sprintf("dataProductResource update schema put %s", id))
+		schemaResult, err := r.schemaClient.Put(ctx, id, schemaPutRequest)
+		if err != nil {
 			resp.Diagnostics.AddError(
-				"ErrorMapping values for datatype meta ",
+				"Error putting data product schema ",
 				"Could not update data product schema, unexpected error: "+err.Error(),
 			)
 			return
 		}
 
-		dt := DataProductDataTypeResourceModel{
-			Meta:       meta,
-			ColumnType: types.StringValue(v.DataType.ColumnType),
+		pfields := []DataProductFieldResourceModel{}
+
+		for _, v := range schemaResult.Fields {
+			tflog.Info(ctx, fmt.Sprintf("dataProductResource ColumnType values [%s] ", types.StringValue(v.DataType.ColumnType)))
+			meta, diag := types.MapValueFrom(ctx, types.StringType, v.DataType.Meta)
+			resp.Diagnostics.Append(diag...)
+			if resp.Diagnostics.HasError() {
+				resp.Diagnostics.AddError(
+					"ErrorMapping values for datatype meta ",
+					"Could not update data product schema, unexpected error: "+err.Error(),
+				)
+				return
+			}
+
+			dt := DataProductDataTypeResourceModel{
+				Meta:       meta,
+				ColumnType: types.StringValue(v.DataType.ColumnType),
+			}
+
+			tflog.Info(ctx, fmt.Sprintf("dataProductResource field values [%s] [%v] [%v] [%s]", types.StringValue(v.Name), types.BoolValue(v.Primary), types.BoolValue(v.Optional), types.StringValue(v.Description)))
+
+			i := DataProductFieldResourceModel{
+				Name:        types.StringValue(v.Name),
+				Primary:     types.BoolValue(v.Primary),
+				Optional:    types.BoolValue(v.Optional),
+				Description: types.StringValue(v.Description),
+				DataType:    dt,
+			}
+			pfields = append(pfields, i)
 		}
 
-		tflog.Info(ctx, fmt.Sprintf("dataProductResource field values [%s] [%v] [%v] [%s]", types.StringValue(v.Name), types.BoolValue(v.Primary), types.BoolValue(v.Optional), types.StringValue(v.Description)))
-
-		i := DataProductFieldResourceModel{
-			Name:        types.StringValue(v.Name),
-			Primary:     types.BoolValue(v.Primary),
-			Optional:    types.BoolValue(v.Optional),
-			Description: types.StringValue(v.Description),
-			DataType:    dt,
+		plan.Schema = DataProductSchemaModel{
+			ProductType: types.StringValue(schemaPutRequest.Details.ProductType),
+			Fields:      pfields,
 		}
-		pfields = append(pfields, i)
 	}
-
-	plan.Schema = DataProductSchemaModel{
-		ProductType: types.StringValue(schemaPutRequest.Details.ProductType),
-		Fields:      pfields,
-	}
-
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

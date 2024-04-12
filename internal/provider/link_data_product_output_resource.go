@@ -37,6 +37,12 @@ func (r *linkDataProductOutputResource) Metadata(_ context.Context, req resource
 func (r *linkDataProductOutputResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Computed:    true,
+				Required:    false,
+				Optional:    false,
+				Description: "The compound identifier of the link",
+			},
 			"parent_identifier": schema.StringAttribute{
 				Computed:    false,
 				Required:    true,
@@ -61,6 +67,7 @@ func (r *linkDataProductOutputResource) Schema(_ context.Context, _ resource.Sch
 
 // linkDataProductOutputResourceModel maps the resource schema data.
 type linkDataProductOutputResourceModel struct {
+	ID               types.String `tfsdk:"id"`
 	ParentIdentifier types.String `tfsdk:"parent_identifier"`
 	ChildIdentifier  types.String `tfsdk:"child_identifier"`
 	LastUpdated      types.String `tfsdk:"last_updated"`
@@ -91,7 +98,7 @@ func (r *linkDataProductOutputResource) Create(ctx context.Context, req resource
 	}
 
 	tflog.Info(ctx, fmt.Sprintf("linkDataProductOutputResource Create Post result [%s] [%s] ", result.Parent.Identifier, result.Child.Identifier))
-
+	plan.ID = types.StringValue(result.Parent.Identifier + "-" + result.Child.Identifier)
 	plan.ParentIdentifier = types.StringValue(result.Parent.Identifier)
 	plan.ChildIdentifier = types.StringValue(result.Child.Identifier)
 	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
@@ -131,6 +138,7 @@ func (r *linkDataProductOutputResource) Read(ctx context.Context, req resource.R
 		tflog.Info(ctx, fmt.Sprintf("linkDataProductOutputResource READ ITEM: [%s] [%s] ", ds.Parent.Identifier, state.ParentIdentifier.ValueString()))
 		if ds.Parent.Identifier == state.ParentIdentifier.ValueString() {
 			tflog.Info(ctx, fmt.Sprintf("linkDataProductOutputResource READ got one in list [%s]", ds.Parent.Identifier))
+			state.ID = types.StringValue(ds.Parent.Identifier + "-" + ds.Child.Identifier)
 			state.ParentIdentifier = types.StringValue(ds.Parent.Identifier)
 			state.ChildIdentifier = types.StringValue(ds.Child.Identifier)
 			break
@@ -163,7 +171,7 @@ func (r *linkDataProductOutputResource) Update(ctx context.Context, req resource
 		)
 		return
 	}
-
+	plan.ID = types.StringValue(result.Parent.Identifier + "-" + result.Child.Identifier)
 	plan.ParentIdentifier = types.StringValue(result.Parent.Identifier)
 	plan.ChildIdentifier = types.StringValue(result.Child.Identifier)
 	diags = resp.State.Set(ctx, plan)
