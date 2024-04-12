@@ -23,7 +23,6 @@ description: |-
 
 ### Optional
 
-- `builder_json` (String) builder json
 - `description` (String) Description of the data product
 - `label` (String) Label for the data product
 - `owner` (String) The owner of the data product

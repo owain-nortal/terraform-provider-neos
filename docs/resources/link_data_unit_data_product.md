@@ -22,4 +22,5 @@ description: |-
 
 ### Read-Only
 
+- `id` (String) compound identifier of the link
 - `last_updated` (String) Last updated time

@@ -149,6 +149,8 @@ github.com/owain-nortal/neos-client-go v0.0.0-20240319150002-2ed78f0209ae h1:itb
 github.com/owain-nortal/neos-client-go v0.0.0-20240319150002-2ed78f0209ae/go.mod h1:ZkPlSfCE4281WSs+0Rmds+VTk0W8+C41uI/eTrRbGWI=
 github.com/owain-nortal/neos-client-go v0.0.0-20240410081630-c1368485457a h1:YhOl+8G0GBj0suBvEo++xFPOu9PoVTsp/JptFBE7rT4=
 github.com/owain-nortal/neos-client-go v0.0.0-20240410081630-c1368485457a/go.mod h1:ZkPlSfCE4281WSs+0Rmds+VTk0W8+C41uI/eTrRbGWI=
+github.com/owain-nortal/neos-client-go v0.0.0-20240412091229-0cc4229123e1 h1:upRVt9pmVXEIokYBAVsT7CXCPhernSLV5CbUH2KCy44=
+github.com/owain-nortal/neos-client-go v0.0.0-20240412091229-0cc4229123e1/go.mod h1:ZkPlSfCE4281WSs+0Rmds+VTk0W8+C41uI/eTrRbGWI=
 github.com/pjbgf/sha1cd v0.3.0 h1:4D5XXmUUBUl/xQ6IjCkEAbqXskkq/4O7LmGn0AqMDs4=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
