@@ -17,8 +17,9 @@ description: |-
 
 ### Optional
 
+- `account` (String, Sensitive)
 - `core_host` (String)
-- `iam_host` (String)
+- `hub_host` (String)
+- `partition` (String, Sensitive)
 - `password` (String, Sensitive)
-- `registry_host` (String)
 - `username` (String)

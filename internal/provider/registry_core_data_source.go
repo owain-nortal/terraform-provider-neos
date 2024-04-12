@@ -3,11 +3,13 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/owain-nortal/neos-client-go"
+	neos "github.com/owain-nortal/neos-client-go"
 )
 
 func NewRegistryCoreDataSource() datasource.DataSource {
@@ -20,7 +22,7 @@ var (
 )
 
 type registryCoreDataSource struct {
-	client *neos.NeosClient
+	client *neos.RegistryCoreClient
 }
 
 func (d *registryCoreDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -28,10 +30,17 @@ func (d *registryCoreDataSource) Metadata(_ context.Context, req datasource.Meta
 }
 
 func (d *registryCoreDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	mod := RegistryCoreDataSourceModel{}
+	req.Config.Get(ctx, &mod)
 
 	var state RegistryCoreDataSourceModel
 
-	list, err := d.client.RegistryCoreGet()
+	//state.RegistryCores = append(state.RegistryCores, RegistryCoreModel{})
+	state.RegistryCores = []RegistryCoreModel{}
+
+	//state.RegistryCores[0].ID = types.StringValue("00000000-0000-0000-0000-000000000000")
+
+	list, err := d.client.Get(mod.Account.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to read registry core List",
@@ -40,19 +49,20 @@ func (d *registryCoreDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	// tflog.Info(ctx, "Abi READ Post error ")
-
-	// tflog.Info(ctx, fmt.Sprintf("Abi READ length %d", len(list.Entities)))
-
 	// Map response body to model
 	for _, ds := range list.Cores {
+		id := d.splitUrnGetId(ds.Urn)
 		registryCoreState := RegistryCoreModel{
-			Host: types.StringValue(ds.Host),
-			Name: types.StringValue(ds.Name),
-			Urn:  types.StringValue(ds.Urn),
+			ID:      types.StringValue(id),
+			Host:    types.StringValue(ds.Host),
+			Name:    types.StringValue(ds.Name),
+			Urn:     types.StringValue(ds.Urn),
+			Account: types.StringValue(ds.Account),
 		}
 		tflog.Info(ctx, fmt.Sprintf("NEOS - ID: %s ", ds.Urn))
-		state.RegistryCores = append(state.RegistryCores, registryCoreState)
+		if (mod.Name.ValueString() == ds.Name) || mod.Name.IsNull() {
+			state.RegistryCores = append(state.RegistryCores, registryCoreState)
+		}
 	}
 
 	// Set state
@@ -63,6 +73,17 @@ func (d *registryCoreDataSource) Read(ctx context.Context, req datasource.ReadRe
 	}
 }
 
+func (d registryCoreDataSource) ValidateConfig(ctx context.Context, req datasource.ValidateConfigRequest, resp *datasource.ValidateConfigResponse) {
+	var data RegistryCoreDataSourceModel
+
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+}
+
 // Configure adds the provider configured client to the data source.
 func (d *registryCoreDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	tflog.Info(ctx, "Registry Core Data source configure")
@@ -71,22 +92,28 @@ func (d *registryCoreDataSource) Configure(ctx context.Context, req datasource.C
 		return
 	}
 
-	client, ok := req.ProviderData.(*neos.NeosClient)
+	var client *neos.NeosClient
+	var ok bool
+	client, ok = req.ProviderData.(*neos.NeosClient)
 	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *neos.NeosClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
+		resp.Diagnostics.AddError("Unexpected registryCoreDataSource Configure Type", fmt.Sprintf("Expected *neos.NeosClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 
 		return
 	}
 
-	d.client = client
+	d.client = &client.RegistryCoreClient
 }
 
-func (d *registryCoreDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *registryCoreDataSource) Schema(_ context.Context, foo datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"account": schema.StringAttribute{
+				Required: true,
+			},
+			"name": schema.StringAttribute{
+				Optional: true,
+			},
 			"registry_cores": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
@@ -100,6 +127,12 @@ func (d *registryCoreDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 						"host": schema.StringAttribute{
 							Computed: true,
 						},
+						"id": schema.StringAttribute{
+							Computed: true,
+						},
+						"account": schema.StringAttribute{
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -109,10 +142,19 @@ func (d *registryCoreDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 
 type RegistryCoreDataSourceModel struct {
 	RegistryCores []RegistryCoreModel `tfsdk:"registry_cores"`
+	Account       types.String        `tfsdk:"account"`
+	Name          types.String        `tfsdk:"name"`
 }
 
 type RegistryCoreModel struct {
-	Host types.String `tfsdk:"host"`
-	Urn  types.String `tfsdk:"urn"`
-	Name types.String `tfsdk:"name"`
+	ID      types.String `tfsdk:"id"`
+	Host    types.String `tfsdk:"host"`
+	Urn     types.String `tfsdk:"urn"`
+	Name    types.String `tfsdk:"name"`
+	Account types.String `tfsdk:"account"`
+}
+
+func (d *registryCoreDataSource) splitUrnGetId(urn string) string {
+	bits := strings.Split(urn, ":")
+	return bits[len(bits)-1]
 }

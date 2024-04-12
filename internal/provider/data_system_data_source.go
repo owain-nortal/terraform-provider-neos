@@ -3,11 +3,12 @@ package provider
 import (
 	"context"
 	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/owain-nortal/neos-client-go"
+	neos "github.com/owain-nortal/neos-client-go"
 )
 
 func NewDataSystemDataSource() datasource.DataSource {
@@ -20,7 +21,7 @@ var (
 )
 
 type dataSystemDataSourceV2 struct {
-	client *neos.NeosClient
+	client *neos.DataSystemClient
 }
 
 func (d *dataSystemDataSourceV2) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -33,7 +34,7 @@ func (d *dataSystemDataSourceV2) Read(ctx context.Context, req datasource.ReadRe
 
 	var state DataSystemDataSourceModelV2
 
-	list, err := d.client.DataSystemGet()
+	list, err := d.client.Get()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read Data System List",
@@ -71,7 +72,6 @@ func (d *dataSystemDataSourceV2) Read(ctx context.Context, req datasource.ReadRe
 
 // Configure adds the provider configured client to the data source.
 func (d *dataSystemDataSourceV2) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	tflog.Info(ctx, "Gwen Freddie Data source configure")
 
 	if req.ProviderData == nil {
 		return
@@ -79,15 +79,12 @@ func (d *dataSystemDataSourceV2) Configure(ctx context.Context, req datasource.C
 
 	client, ok := req.ProviderData.(*neos.NeosClient)
 	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *neos.DataSystemClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
+		resp.Diagnostics.AddError("Unexpected dataSystemDataSourceV2 Configure Type", fmt.Sprintf("Expected *neos.NeosClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 
 		return
 	}
 
-	d.client = client
+	d.client = &client.DataSystemClient
 }
 
 func (d *dataSystemDataSourceV2) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {

@@ -24,7 +24,7 @@ website/node_modules
 *.iml
 *.test
 *.iml
-
+test/live-data-unit/
 website/vendor
 
 # Test exclusions
