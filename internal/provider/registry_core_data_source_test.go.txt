@@ -12,7 +12,7 @@ func TestAccRegistryCoreDataSource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Read testing
 			{
-				Config: providerConfig + `data "neos_registry_core" "test" {}`,
+				Config: providerConfig + `data "neos_user" "test" {}`,
 				Check:  resource.ComposeAggregateTestCheckFunc(
 				// Verify number of coffees returned
 				//resource.TestCheckResourceAttr("data.neos_registry_core.test", "registry_cores.#", "9"),
