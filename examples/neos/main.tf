@@ -6,35 +6,41 @@ terraform {
   }
 }
 
+variable "password" {
+  default = ""
+  type    = string
+}
+
+
 provider "neos" {
-  username      = ""
-  password      = ""
-  iam_host      = ""
-  core_host     = ""
-  registry_host = ""
+  username      = "owain.perry"
+  password      = var.password
+  iam_host      = "sandbox.city3os.com"
+  core_host     = "op-02.neosdata.net"
+  registry_host = "sandbox.city3os.com"
 }
 
 //data "neos_data_system" "example" {}
 
-data "neos_registry_core" "cores" {
-}
-
-# output "edu_data_system" {
-#   value = data.neos_registry_core.cores
+# data "neos_registry_core" "cores" {
 # }
 
-data "neos_data_system" "edu" {
-}
+# # output "edu_data_system" {
+# #   value = data.neos_registry_core.cores
+# # }
+
+# data "neos_data_system" "edu" {
+# }
 
 
-resource "neos_registry_core" "testcore1" {
-  partition = "ksa"
-  name      = "owain-test3"
-}
+# resource "neos_registry_core" "testcore1" {
+#   partition = "ksa"
+#   name      = "owain-test3"
+# }
 
-output "access_key" {
-  value = neos_registry_core.testcore1.access_key
-}
+# output "access_key" {
+#   value = neos_registry_core.testcore1.access_key
+# }
 
 
 # output "edu_data_system" {
@@ -78,3 +84,13 @@ output "access_key" {
 #   links       = var.links
 #   contact_ids = var.contact_ids
 # }
+
+
+resource "neos_data_product" "dp-test1" {
+  name        = "APTestDataProduct1"
+  description = "desc test data product 1"
+  owner       = "test data product 1"
+  label       = "DP1"
+  links       = var.links
+  contact_ids = var.contact_ids
+}

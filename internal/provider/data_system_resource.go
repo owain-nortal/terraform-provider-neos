@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -11,8 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/owain-nortal/neos-client-go"
-	"time"
+	neos "github.com/owain-nortal/neos-client-go"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -27,7 +28,7 @@ func NewDataSystemResource() resource.Resource {
 
 // dataSystemResource is the resource implementation.
 type dataSystemResource struct {
-	client *neos.NeosClient
+	client *neos.DataSystemClient
 }
 
 var (
@@ -133,7 +134,7 @@ type dataSystemResourceModel struct {
 
 // Create a new resource.
 func (r *dataSystemResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	//tflog.Info(ctx, "££ Create Get plan")
+	//tflog.Info(ctx, "dataSystemResource Create ")
 	// Retrieve values from plan
 	var plan dataSystemResourceModel
 	diags := req.Plan.Get(ctx, &plan)
@@ -142,16 +143,16 @@ func (r *dataSystemResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	//tflog.Info(ctx, "££ After Create Get plan")
-
 	linkList, diag := plan.Links.ToListValue(ctx)
 	resp.Diagnostics.Append(diag...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var links []string
-	for _, v := range linkList.Elements() {
-		links = append(links, v.String())
+	var links = make([]string, 0)
+	diag = linkList.ElementsAs(ctx, &links, false)
+	resp.Diagnostics.Append(diag...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	contactIDs, diag := plan.ContactIds.ToListValue(ctx)
@@ -159,36 +160,31 @@ func (r *dataSystemResource) Create(ctx context.Context, req resource.CreateRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var contacts []string
-	for _, v := range contactIDs.Elements() {
-		contacts = append(contacts, v.String())
+	var contacts = make([]string, 0)
+	diag = contactIDs.ElementsAs(ctx, &contacts, false)
+	resp.Diagnostics.Append(diag...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	item := neos.DataSystemPostRequest{
 		Entity: neos.DataSystemPostRequestEntity{
-			Name:        plan.Name.String(),
-			Label:       plan.Label.String(),
-			Description: plan.Description.String(),
+			Name:        plan.Name.ValueString(),
+			Label:       plan.Label.ValueString(),
+			Description: plan.Description.ValueString(),
 		},
 		EntityInfo: neos.DataSystemPostRequestEntityInfo{
-			Owner:      plan.Owner.String(),
+			Owner:      plan.Owner.ValueString(),
 			ContactIds: contacts,
 			Links:      links,
 		},
 	}
 
-	//	tflog.Info(ctx, fmt.Sprintf("££ Create Post request [%s] [%s] [%s] [%s]", plan.ID, plan.Name, plan.Label, plan.Description))
-
-	result, err := r.client.DataSystemPost(ctx, item)
+	result, err := r.client.Post(ctx, item)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating   data system",
-			"Could not create   data system, unexpected error: "+err.Error(),
-		)
+		resp.Diagnostics.AddError("Error creating   data system", "Could not create   data system, unexpected error: "+err.Error())
 		return
 	}
-
-	//	tflog.Info(ctx, fmt.Sprintf("££ Create Post result [%s] [%s] [%s] [%s] [%s] [%s]", result.Identifier, result.Name, result.Urn, result.Description, result.Label, result.CreatedAt.String()))
 
 	plan.ID = types.StringValue(result.Identifier)
 	plan.Name = types.StringValue(result.Name)
@@ -203,16 +199,12 @@ func (r *dataSystemResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	//	tflog.Info(ctx, fmt.Sprintf("ID [%s] Desc[%s]", plan.ID, plan.Description))
-
 }
 
 // Read refreshes the Terraform state with the latest data.
 // Read resource information.
 func (r *dataSystemResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	// Get current state
-
-	//	tflog.Info(ctx, "££ READ Get current state")
 
 	var state dataSystemResourceModel
 	diags := req.State.Get(ctx, &state)
@@ -224,20 +216,15 @@ func (r *dataSystemResource) Read(ctx context.Context, req resource.ReadRequest,
 	foo := fmt.Sprintf("ID [%s]  Desc [%s]", state.ID.ValueString(), state.Description.ValueString())
 	tflog.Info(ctx, foo)
 
-	dataSystemList, err := r.client.DataSystemGet()
+	dataSystemList, err := r.client.Get()
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Reading NEOS data system",
-			"Could not read NEOS  data system ID "+state.ID.ValueString()+": "+err.Error(),
-		)
+		resp.Diagnostics.AddError("Error Reading NEOS data system", "Could not read NEOS  data system ID "+state.ID.ValueString()+": "+err.Error())
 		return
 	}
 
 	tflog.Info(ctx, fmt.Sprintf("££ READ iterate over list looking for: %s", state.ID.ValueString()))
 	for _, ds := range dataSystemList.Entities {
-		//		tflog.Info(ctx, fmt.Sprintf("££ READ ITEM: [%s] [%s] %v", ds.Identifier, state.ID.ValueString(), (ds.Identifier == state.ID.ValueString())))
 		if ds.Identifier == state.ID.ValueString() {
-			//			tflog.Info(ctx, fmt.Sprintf("££ READ got one in list [%s]", ds.Identifier))
 			state.ID = types.StringValue(ds.Identifier)
 			state.Name = types.StringValue(ds.Name)
 			state.Label = types.StringValue(ds.Label)
@@ -248,12 +235,6 @@ func (r *dataSystemResource) Read(ctx context.Context, req resource.ReadRequest,
 			break
 		}
 	}
-
-	//	tsv, _ := state.ID.ToStringValue(ctx)
-	// Set refreshed state
-	//	tflog.Info(ctx, "££ READ iterate over list")
-	//	tflog.Info(ctx, tsv.String())
-	//	tflog.Info(ctx, state.ID.ValueString())
 
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -273,22 +254,16 @@ func (r *dataSystemResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	//tflog.Info(ctx, "££ Update After Create Get plan")
-	// i, e := plan.ID.ToStringValue(ctx)
-	// if e.HasError() {
-	// 	tflog.Info(ctx, "Data system update plan get has error")
-	// 	return
-	// }
-
 	linkList, diag := plan.Links.ToListValue(ctx)
 	resp.Diagnostics.Append(diag...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	var links []string
-	for _, v := range linkList.Elements() {
-		links = append(links, v.String())
+	var links = make([]string, 0)
+	diag = linkList.ElementsAs(ctx, &links, false)
+	resp.Diagnostics.Append(diag...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	contactIDs, diag := plan.ContactIds.ToListValue(ctx)
@@ -296,43 +271,36 @@ func (r *dataSystemResource) Update(ctx context.Context, req resource.UpdateRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var contacts []string
-	for _, v := range contactIDs.Elements() {
-		contacts = append(contacts, v.String())
+	var contacts = make([]string, 0)
+	diag = contactIDs.ElementsAs(ctx, &contacts, false)
+	resp.Diagnostics.Append(diag...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
-
-	//tflog.Info(ctx, "££££ update After the ranges")
 
 	item := neos.DataSystemPutRequest{
 		Entity: neos.DataSystemPutRequestEntity{
-			Name:        plan.Name.String(),
-			Label:       plan.Label.String(),
-			Description: plan.Description.String(),
+			Name:        plan.Name.ValueString(),
+			Label:       plan.Label.ValueString(),
+			Description: plan.Description.ValueString(),
 		},
 	}
 
 	eItem := neos.DataSystemPutRequestEntityInfo{
-		Owner:      plan.Owner.String(),
+		Owner:      plan.Owner.ValueString(),
 		ContactIds: contacts,
 		Links:      links,
 	}
 
-	result, err := r.client.DataSystemPut(ctx, plan.ID.ValueString(), item)
+	result, err := r.client.Put(ctx, plan.ID.ValueString(), item)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error updating data system",
-			"Could not put data system, unexpected error: "+err.Error(),
-		)
+		resp.Diagnostics.AddError("Error updating data system", "Could not put data system, unexpected error: "+err.Error())
 		return
 	}
-	//tflog.Info(ctx, fmt.Sprintf("££ Create Post result [%s] [%s] [%s] [%s] [%s] [%s]", result.Identifier, result.Name, result.Urn, result.Description, result.Label, result.CreatedAt.String()))
 
-	infoResult, err := r.client.DataSystemPutInfo(ctx, plan.ID.ValueString(), eItem)
+	infoResult, err := r.client.PutInfo(ctx, plan.ID.ValueString(), eItem)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error updating data system",
-			"Could not put data system, unexpected error: "+err.Error(),
-		)
+		resp.Diagnostics.AddError("Error updating data system", "Could not put data system, unexpected error: "+err.Error())
 		return
 	}
 
@@ -374,12 +342,9 @@ func (r *dataSystemResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	err := r.client.DataSystemDelete(ctx, plan.ID.ValueString())
+	err := r.client.Delete(ctx, plan.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error deleting data system",
-			"Could not delete data system, unexpected error: "+err.Error(),
-		)
+		resp.Diagnostics.AddError("Error deleting data system", "Could not delete data system, unexpected error: "+err.Error())
 		return
 	}
 
@@ -393,15 +358,12 @@ func (r *dataSystemResource) Configure(_ context.Context, req resource.Configure
 	client, ok := req.ProviderData.(*neos.NeosClient)
 
 	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *neos.DataSystemClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
-
+		resp.Diagnostics.AddError("Unexpected Data Source Configure Type", fmt.Sprintf("Expected *neos.DataSystemClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 		return
 	}
 
-	r.client = client
+	r.client = &client.DataSystemClient
+
 }
 
 func (r *dataSystemResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
