@@ -208,7 +208,7 @@ func (r *accountResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	item := neos.AccountPutRequest{
-		DisplayName: plan.DisplayName.String(),
+		DisplayName: plan.DisplayName.ValueString(),
 		Owner:       plan.Owner.ValueString(),
 		Description: plan.Description.ValueString(),
 	}
