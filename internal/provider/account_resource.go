@@ -129,7 +129,7 @@ func (r *accountResource) Create(ctx context.Context, req resource.CreateRequest
 
 	item := neos.AccountPostRequest{
 		Name:        plan.Name.ValueString(),
-		DisplayName: plan.DisplayName.String(),
+		DisplayName: plan.DisplayName.ValueString(),
 		Description: plan.Description.ValueString(),
 		Owner:       plan.Owner.ValueString(),
 	}
