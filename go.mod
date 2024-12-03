@@ -8,11 +8,11 @@ require (
 	github.com/hashicorp/terraform-plugin-framework v1.7.0
 	github.com/hashicorp/terraform-plugin-go v0.22.1 // indirect
 	github.com/hashicorp/terraform-plugin-log v0.9.0
-	github.com/owain-nortal/neos-client-go v0.0.0-20241203093051-b750738d14eb
+	github.com/owain-nortal/neos-client-go v0.0.0-20241203194707-92389543af01
 	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df
 )
 
-//replace github.com/owain-nortal/neos-client-go => /home/user/git/github.com/owain-nortal/neos-client
+replace github.com/owain-nortal/neos-client-go => /home/user/git/github.com/owain-nortal/neos-client
 
 require github.com/hashicorp/terraform-plugin-framework-jsontypes v0.1.0
 
