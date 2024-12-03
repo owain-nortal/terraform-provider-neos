@@ -9,7 +9,7 @@ require (
 	github.com/hashicorp/terraform-plugin-go v0.22.1
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-testing v1.7.0
-	github.com/owain-nortal/neos-client-go v0.0.0-20240412091229-0cc4229123e1
+	github.com/owain-nortal/neos-client-go v0.0.0-20241203093051-b750738d14eb
 	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df
 )
 

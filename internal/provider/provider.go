@@ -264,7 +264,7 @@ func (p *neosProvider) Configure(ctx context.Context, req provider.ConfigureRequ
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "neos_password")
 	tflog.Info(ctx, "Creating NEOS IAM client")
 
-	iamUrl := fmt.Sprintf("%s/api/iam", hubhost)
+	iamUrl := fmt.Sprintf("%s/api/hub/iam", hubhost)
 	iamClient := neos.NewIAMClient(iamUrl, username, password)
 	loginResponse, err := iamClient.Login()
 
