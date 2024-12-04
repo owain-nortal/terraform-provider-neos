@@ -12,7 +12,7 @@ require (
 	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df
 )
 
-replace github.com/owain-nortal/neos-client-go => /home/user/git/github.com/owain-nortal/neos-client
+#replace github.com/owain-nortal/neos-client-go => /home/user/git/github.com/owain-nortal/neos-client
 
 require github.com/hashicorp/terraform-plugin-framework-jsontypes v0.1.0
 
